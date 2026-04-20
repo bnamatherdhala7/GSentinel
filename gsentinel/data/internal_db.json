@@ -1,0 +1,48 @@
+{
+  "employees": [
+    {
+      "id": "EMP001",
+      "name": "Alex Rivera",
+      "dob": "1988-03-14",
+      "ssn_last4": "4821",
+      "address": {
+        "street": "412 Maple Ave",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78701"
+      },
+      "plan": "GOLD_PPO",
+      "dependents": []
+    },
+    {
+      "id": "EMP002",
+      "name": "Jordan Smith",
+      "dob": "1992-07-22",
+      "ssn_last4": "3367",
+      "address": {
+        "street": "89 Birch Lane",
+        "city": "Denver",
+        "state": "CO",
+        "zip": "80201"
+      },
+      "plan": "SILVER_HMO",
+      "dependents": [
+        { "name": "Casey Smith", "dob": "2019-11-05", "relation": "child" }
+      ]
+    },
+    {
+      "id": "EMP003",
+      "name": "Morgan Lee",
+      "dob": "1979-01-30",
+      "ssn_last4": "9104",
+      "address": {
+        "street": "210 Oak Street",
+        "city": "Portland",
+        "state": "OR",
+        "zip": "97201"
+      },
+      "plan": "BRONZE_EPO",
+      "dependents": []
+    }
+  ]
+}

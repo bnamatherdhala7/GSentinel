@@ -1,0 +1,8 @@
+{
+  "required_fields": ["id", "name", "dob", "ssn_last4", "address", "plan"],
+  "address_required": ["street", "city", "state", "zip"],
+  "zip_format": "^[0-9]{5}$",
+  "dob_format": "YYYY-MM-DD",
+  "ssn_last4_format": "^[0-9]{4}$",
+  "valid_plans": ["GOLD_PPO", "SILVER_HMO", "BRONZE_EPO", "PLATINUM_PPO"]
+}

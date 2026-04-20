@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GSentinel — Agentic Benefits Fulfillment Engine</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e2d45;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --node-w: 180px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .run-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .run-btn:hover { opacity: 0.9; }
+    .run-btn:active { transform: scale(0.97); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Layout ── */
+    .main { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 73px); }
+    .pipeline-section {
+      padding: 32px 40px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* ── Pipeline ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .node-wrap {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .node {
+      width: var(--node-w);
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .node::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s;
+      border-radius: 14px;
+    }
+    .node.idle { border-color: var(--border); }
+    .node.running { border-color: var(--accent); box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+    .node.running::before { background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.08), transparent 70%); opacity: 1; }
+    .node.done { border-color: var(--green); }
+    .node.done::before { background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.06), transparent 70%); opacity: 1; }
+    .node.active-detail { box-shadow: 0 0 0 2px var(--accent2), 0 8px 32px rgba(139,92,246,0.2); }
+    .node:hover { transform: translateY(-2px); }
+
+    .node-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .node-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .node-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    .node-status {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .node.running .node-status { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+    .node.done .node-status { background: var(--green); }
+
+    .node-time {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px;
+      font-variant-numeric: tabular-nums;
+      min-height: 14px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.4); }
+    }
+
+    /* ── Connector ── */
+    .connector {
+      display: flex;
+      align-items: center;
+      width: 56px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .connector-line {
+      height: 2px;
+      flex: 1;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    .connector-line::after {
+      content: '';
+      position: absolute;
+      left: -100%;
+      top: 0; bottom: 0;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      transition: left 0s;
+    }
+    .connector-line.flowing::after {
+      animation: flow 0.6s ease-in-out forwards;
+    }
+    @keyframes flow {
+      from { left: -100%; }
+      to { left: 100%; }
+    }
+    .connector-arrow {
+      width: 0; height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid var(--border);
+      transition: border-left-color 0.3s;
+    }
+    .connector-line.flowing + .connector-arrow { border-left-color: var(--accent); }
+
+    /* ── Bottom panels ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
+    }
+    .panel {
+      padding: 24px 28px;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    .panel:last-child { border-right: none; }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── Node detail ── */
+    .detail-placeholder {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 40px;
+      line-height: 1.6;
+    }
+    .detail-node-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .detail-icon { font-size: 28px; }
+    .detail-name { font-size: 17px; font-weight: 700; }
+    .detail-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-top: 3px;
+    }
+    .badge-running { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .badge-done { background: rgba(16,185,129,0.15); color: var(--green); }
+    .badge-idle { background: rgba(100,116,139,0.15); color: var(--muted); }
+
+    .kv-block { margin-bottom: 16px; }
+    .kv-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .kv-table { width: 100%; border-collapse: collapse; }
+    .kv-table tr td {
+      padding: 6px 8px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .kv-table tr td:first-child {
+      color: var(--muted);
+      width: 45%;
+      font-weight: 500;
+    }
+    .kv-table tr td:last-child {
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      word-break: break-all;
+    }
+    .val-highlight {
+      background: rgba(16,185,129,0.12);
+      color: var(--green);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .val-warn {
+      background: rgba(245,158,11,0.12);
+      color: var(--yellow);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* ── Action card ── */
+    .action-card {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: border-color 0.3s;
+    }
+    .action-card.success { border-color: var(--green); background: rgba(16,185,129,0.05); }
+    .action-card.review { border-color: var(--yellow); background: rgba(245,158,11,0.05); }
+    .action-card-text {
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-val { font-size: 20px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* ── Trace log ── */
+    .trace-entry {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      line-height: 1.7;
+    }
+    .trace-node-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-parser { background: rgba(139,92,246,0.2); color: #a78bfa; }
+    .badge-healer { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .badge-critic { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .badge-messenger { background: rgba(16,185,129,0.2); color: #34d399; }
+
+    .trace-kv { color: var(--muted); }
+    .trace-kv span { color: var(--text); }
+
+    /* ── Empty states ── */
+    .empty-trace {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 32px 0;
+    }
+
+    /* ── Progress bar ── */
+    .progress-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ── Confidence meter ── */
+    .confidence-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .confidence-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .confidence-fill.high { background: var(--green); }
+    .confidence-fill.low { background: var(--yellow); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">GSentinel</div>
+      <div class="logo-sub">Agentic Benefits Fulfillment Engine</div>
+    </div>
+  </div>
+  <button class="run-btn" id="runBtn" onclick="runPipeline()">
+    <span>▶</span> Run Agent Pipeline
+  </button>
+</header>
+
+<div class="main">
+  <!-- Pipeline visualization -->
+  <div class="pipeline-section">
+    <div class="section-label">Agent Pipeline</div>
+    <div class="pipeline">
+      <!-- Parser -->
+      <div class="node-wrap">
+        <div class="node idle" id="node-parser" onclick="selectNode('parser')">
+          <div class="node-status"></div>
+          <span class="node-icon">🔍</span>
+          <div class="node-name">Parser</div>
+          <div class="node-desc">Extracts employee ID, error code & field from carrier rejection</div>
+          <div class="node-time" id="time-parser"></div>
+        </div>
+      </div>
+      <div class="node-wrap">
+        <div class="connector">
+          <div class="connector-line" id="conn-1"></div>
+          <div class="connector-arrow"></div>
+        </div>
+      </div>
+      <!-- Healer -->
+      <div class="node-wrap">
+        <div class="node idle" id="node-healer" onclick="selectNode('healer')">
+          <div class="node-status"></div>
+          <span class="node-icon">🩺</span>
+          <div class="node-name">Healer</div>
+          <div class="node-desc">Looks up correct value from internal HR database</div>
+          <div class="node-time" id="time-healer"></div>
+        </div>
+      </div>
+      <div class="node-wrap">
+        <div class="connector">
+          <div class="connector-line" id="conn-2"></div>
+          <div class="connector-arrow"></div>
+        </div>
+      </div>
+      <!-- Critic -->
+      <div class="node-wrap">
+        <div class="node idle" id="node-critic" onclick="selectNode('critic')">
+          <div class="node-status"></div>
+          <span class="node-icon">⚖️</span>
+          <div class="node-name">Critic</div>
+          <div class="node-desc">Validates corrected value against enrollment schema</div>
+          <div class="node-time" id="time-critic"></div>
+        </div>
+      </div>
+      <div class="node-wrap">
+        <div class="connector">
+          <div class="connector-line" id="conn-3"></div>
+          <div class="connector-arrow"></div>
+        </div>
+      </div>
+      <!-- Messenger -->
+      <div class="node-wrap">
+        <div class="node idle" id="node-messenger" onclick="selectNode('messenger')">
+          <div class="node-status"></div>
+          <span class="node-icon">📨</span>
+          <div class="node-name">Messenger</div>
+          <div class="node-desc">Generates action card & sets fulfillment status</div>
+          <div class="node-time" id="time-messenger"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Bottom panels -->
+  <div class="panels">
+    <!-- Node detail -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span> Node Detail</div>
+      <div id="nodeDetail">
+        <div class="detail-placeholder">
+          Click a node above or run the pipeline<br/>to inspect its inputs & outputs.
+        </div>
+      </div>
+    </div>
+
+    <!-- Action card + stats -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot" style="background:var(--green)"></span> Result</div>
+      <div id="resultPanel">
+        <div class="detail-placeholder">Run the pipeline to see the result.</div>
+      </div>
+    </div>
+
+    <!-- Trace log -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot" style="background:var(--accent2)"></span> Agent Trace</div>
+      <div id="tracePanel">
+        <div class="empty-trace">No trace yet — run the pipeline.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const NODE_ORDER = ['parser', 'healer', 'critic', 'messenger'];
+  const NODE_META = {
+    parser:    { icon: '🔍', label: 'Parser' },
+    healer:    { icon: '🩺', label: 'Healer' },
+    critic:    { icon: '⚖️', label: 'Critic' },
+    messenger: { icon: '📨', label: 'Messenger' },
+  };
+
+  let pipelineData = null;
+  let selectedNode = null;
+
+  function setNodeState(name, state) {
+    const el = document.getElementById('node-' + name);
+    el.classList.remove('idle', 'running', 'done');
+    el.classList.add(state);
+  }
+
+  function flowConnector(id) {
+    const el = document.getElementById('conn-' + id);
+    el.classList.remove('flowing');
+    void el.offsetWidth;
+    el.classList.add('flowing');
+  }
+
+  function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function setNodeTime(name, ms) {
+    document.getElementById('time-' + name).textContent = ms + 'ms';
+  }
+
+  function selectNode(name) {
+    // deselect all
+    NODE_ORDER.forEach(n => document.getElementById('node-' + n).classList.remove('active-detail'));
+    document.getElementById('node-' + name).classList.add('active-detail');
+    selectedNode = name;
+    renderNodeDetail(name);
+  }
+
+  function renderNodeDetail(name) {
+    if (!pipelineData) {
+      document.getElementById('nodeDetail').innerHTML = '<div class="detail-placeholder">Run the pipeline first.</div>';
+      return;
+    }
+    const step = pipelineData.steps.find(s => s.node === name);
+    if (!step) return;
+
+    const meta = NODE_META[name];
+    const statusClass = step ? 'done' : 'idle';
+
+    let html = `
+      <div class="detail-node-header">
+        <div class="detail-icon">${meta.icon}</div>
+        <div>
+          <div class="detail-name">${meta.label}</div>
+          <span class="detail-badge badge-done">Completed in ${step.duration_ms}ms</span>
+        </div>
+      </div>
+    `;
+
+    html += `<div class="kv-block"><div class="kv-label">Inputs</div><table class="kv-table">`;
+    for (const [k, v] of Object.entries(step.inputs)) {
+      const val = typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + '…' : v;
+      html += `<tr><td>${k}</td><td>${val ?? '—'}</td></tr>`;
+    }
+    html += `</table></div>`;
+
+    html += `<div class="kv-block"><div class="kv-label">Outputs</div><table class="kv-table">`;
+    for (const [k, v] of Object.entries(step.outputs)) {
+      let display = v;
+      if (k === 'corrected_value') display = `<span class="val-highlight">${v}</span>`;
+      if (k === 'confidence_score') {
+        const pct = Math.round(v * 100);
+        const cls = v >= 0.9 ? 'high' : 'low';
+        display = `${pct}%<div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div>`;
+      }
+      if (k === 'valid') display = v ? `<span class="val-highlight">✓ Valid</span>` : `<span class="val-warn">✗ Invalid</span>`;
+      if (k === 'status') display = v === 'AUTO_FIXED' ? `<span class="val-highlight">${v}</span>` : `<span class="val-warn">${v}</span>`;
+      html += `<tr><td>${k}</td><td>${display ?? '—'}</td></tr>`;
+    }
+    html += `</table></div>`;
+
+    document.getElementById('nodeDetail').innerHTML = html;
+  }
+
+  function renderResult(data) {
+    const isSuccess = data.status === 'AUTO_FIXED';
+    const cardClass = isSuccess ? 'success' : 'review';
+
+    let html = `
+      <div class="action-card ${cardClass}">
+        <div class="action-card-text">${data.action_card}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-val">${data.confidence_score * 100}%</div>
+          <div class="stat-label">Confidence</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">${data.total_ms}ms</div>
+          <div class="stat-label">Total time</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">${data.status === 'AUTO_FIXED' ? '✓' : '!'}</div>
+          <div class="stat-label">${data.status}</div>
+        </div>
+      </div>
+    `;
+
+    html += `
+      <div style="margin-top:20px">
+        <div class="kv-label">Correction Summary</div>
+        <table class="kv-table" style="margin-top:8px">
+          <tr><td>Employee</td><td>${data.employee_id}</td></tr>
+          <tr><td>Error code</td><td>${data.error_code}</td></tr>
+          <tr><td>Submitted value</td><td><span class="val-warn">${data.submitted_value}</span></td></tr>
+          <tr><td>Corrected value</td><td><span class="val-highlight">${data.corrected_value}</span></td></tr>
+        </table>
+      </div>
+    `;
+
+    document.getElementById('resultPanel').innerHTML = html;
+  }
+
+  function renderTrace(steps) {
+    const badgeClass = { parser: 'badge-parser', healer: 'badge-healer', critic: 'badge-critic', messenger: 'badge-messenger' };
+    let html = '';
+    for (const step of steps) {
+      const bc = badgeClass[step.node] || '';
+      html += `<div class="trace-entry">`;
+      html += `<div><span class="trace-node-badge ${bc}">${step.node}</span></div>`;
+      for (const [k, v] of Object.entries(step.trace)) {
+        if (k === 'node') continue;
+        const val = typeof v === 'string' && v.length > 80 ? v.slice(0, 80) + '…' : JSON.stringify(v);
+        html += `<div class="trace-kv">${k}: <span>${val}</span></div>`;
+      }
+      html += `</div>`;
+    }
+    document.getElementById('tracePanel').innerHTML = html || '<div class="empty-trace">No trace entries.</div>';
+  }
+
+  async function runPipeline() {
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="animation:pulse 1s infinite">⏳</span> Running…';
+
+    // Reset
+    NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
+    ['conn-1','conn-2','conn-3'].forEach(id => {
+      document.getElementById(id).classList.remove('flowing');
+    });
+    NODE_ORDER.forEach(n => document.getElementById('time-' + n).textContent = '');
+    setProgress(0);
+    document.getElementById('nodeDetail').innerHTML = '<div class="detail-placeholder">Pipeline running…</div>';
+    document.getElementById('resultPanel').innerHTML = '<div class="detail-placeholder">Running…</div>';
+    document.getElementById('tracePanel').innerHTML = '<div class="empty-trace">Collecting trace…</div>';
+
+    try {
+      // Animate running states sequentially for visual effect
+      const DELAYS = [0, 300, 600, 900];
+      NODE_ORDER.forEach((n, i) => {
+        setTimeout(() => {
+          setNodeState(n, 'running');
+          setProgress((i + 1) * 20);
+          if (i > 0) flowConnector(i);
+        }, DELAYS[i]);
+      });
+
+      const res = await fetch('/api/run');
+      const data = await res.json();
+      pipelineData = data;
+
+      // Mark all done with timing
+      NODE_ORDER.forEach((n, i) => {
+        setTimeout(() => {
+          setNodeState(n, 'done');
+          const step = data.steps.find(s => s.node === n);
+          if (step) setNodeTime(n, step.duration_ms);
+          if (i === NODE_ORDER.length - 1) {
+            flowConnector(3);
+            setProgress(100);
+            renderResult(data);
+            renderTrace(data.steps);
+            if (selectedNode) renderNodeDetail(selectedNode);
+            btn.disabled = false;
+            btn.innerHTML = '<span>▶</span> Run Again';
+          }
+        }, DELAYS[i] + 200);
+      });
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>▶</span> Run Agent Pipeline';
+      NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
+      document.getElementById('resultPanel').innerHTML = `<div class="detail-placeholder" style="color:var(--red)">Error: ${err.message}<br/>Is the API server running?</div>`;
+    }
+  }
+</script>
+</body>
+</html>
