@@ -243,3 +243,83 @@ Features:
 HARD RULES ADDITIONS:
 - Frontend must never display raw SSN, only ssn_last4 where shown
 - No third-party analytics or tracking scripts in the frontend
+
+---
+
+STEP 8 — ENTERPRISE REASONING LAYER (COMPLETED)
+
+Purpose: Surface agentic reasoning, RAG-based knowledge retrieval, and compliance
+auditing to make the engine enterprise-ready. All changes are local and deterministic.
+
+STATE ADDITIONS (graph/state.py):
+- latency_ms: dict        — wall-clock time per node {"parser":507, "healer":506, ...}
+- kb_evidence: str        — verbatim snippet from carrier_errors.md that justified the fix
+- reasoning_path: list    — internal monologue entries, one per node
+
+NODE CHANGES (graph/nodes.py):
+
+  parser_node — RAG Extractor
+  - time.sleep(0.5) — deliberate think pause for UI breathing
+  - Scans document for ALL candidate employee IDs and error codes → top_candidates list
+  - Selects primary ID/code with a reasoning string explaining the selection logic
+  - Stores verbatim KB evidence (heading + body) from carrier_errors.md → state["kb_evidence"]
+  - Appends reasoning to state["reasoning_path"]
+  - Logs latency to state["latency_ms"]["parser"]
+
+  healer_node — DB Lookup
+  - time.sleep(0.5) — deliberate think pause for UI breathing
+  - Iterates all DB records, logging each as Record[idx] → MATCH or skip
+  - Records search_depth list (audit trail of every record scanned)
+  - Logs mismatch_log: "Record[1].address.zip = '80201' | Carrier submitted '8020' → MISMATCH"
+  - Appends reasoning to state["reasoning_path"]
+  - Logs latency to state["latency_ms"]["healer"]
+
+  critic_node — Jailbreak & Compliance Guard (formerly just "Critic")
+  - Now runs 3 explicit compliance checks:
+      Check 1 — Format guard: regex pattern from standard_enr.json
+      Check 2 — Jailbreak guard: value not in blocked sentinel list (00000, 99999, 11111, 12345, 00001)
+      Check 3 — Injection guard: numeric fields must be all-digit
+  - Logs pattern_tested, validation_log (per-check PASS/FAIL), and summary
+  - confidence_score: 0.95 (all pass) | 0.7 (format pass only) | 0.5 (format fail)
+  - Appends reasoning to state["reasoning_path"]
+  - Logs latency to state["latency_ms"]["critic"]
+
+  messenger_node — Product-Led Action Card
+  - Action card now includes:
+      Field, Change (original → corrected), Employee name + ID
+      Reason: plain-English explanation of what went wrong and why
+      Confidence: percentage + check pass count
+  - Appends reasoning to state["reasoning_path"]
+  - Logs latency to state["latency_ms"]["messenger"]
+
+SENTINEL.PY ADDITIONS:
+- build_compliance_report(state) — prints the Safety & Compliance Report to console:
+    Node latencies (per node + total)
+    DB search depth: N records scanned
+    Mismatch log verbatim
+    Compliance check results (3/3 PASS/FAIL)
+    KB evidence char count
+    Reasoning steps count
+- Prints full reasoning_path (4 monologue entries) after the action card
+
+API.PY ADDITIONS:
+- Each step in /api/run now includes: reasoning, top_candidates, mismatch_log,
+  search_depth, pattern_tested, validation_log, summary, kb_evidence_chars
+- Response includes compliance_report object with all audit fields
+- Response includes reasoning_path array and kb_evidence string
+
+UI ADDITIONS (frontend/index.html):
+- Node roles shown under name (RAG Extractor, DB Lookup, Compliance Guard, Action Card)
+- Parser node detail: RAG candidates panel (tag list of all IDs/codes found)
+- Healer node detail: search_depth checklist + mismatch log box
+- Critic node detail: pattern_tested, per-check validation log with ✓/✗, summary box
+- Third panel now has 3 tabs: Agent Trace | Compliance | Reasoning Path
+    Compliance tab: latency table, check list, mismatch log, KB evidence box
+    Reasoning Path tab: 4-step internal monologue, one entry per node
+- Version badge: "v0.3 · RAG + Compliance Guard"
+
+HARD RULES (unchanged):
+- No external tools — all lookups are local file reads
+- LLM never guesses financial fields — Healer uses only internal_db.json
+- Every auto-fix must pass all 3 Critic compliance checks before AUTO_FIXED
+- time.sleep() is intentional — it makes agent reasoning visible in the UI

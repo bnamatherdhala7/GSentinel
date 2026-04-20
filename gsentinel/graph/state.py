@@ -20,3 +20,7 @@ class FulfillmentState(TypedDict):
     action_card: Optional[str]
     status: Optional[FulfillmentStatus]
     trace: list
+    # --- v0.3 additions ---
+    latency_ms: dict          # per-node wall-clock time: {"parser": 512, "healer": 501, ...}
+    kb_evidence: str          # verbatim snippet from carrier_errors.md that justified the fix
+    reasoning_path: list      # internal monologue entries appended by each node

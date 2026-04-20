@@ -15,9 +15,10 @@
       --green: #10b981;
       --yellow: #f59e0b;
       --red: #ef4444;
+      --teal: #06b6d4;
       --text: #e2e8f0;
       --muted: #64748b;
-      --node-w: 180px;
+      --node-w: 172px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -25,378 +26,240 @@
       color: var(--text);
       font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
     }
 
     /* ── Header ── */
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 32px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
     }
     .logo { display: flex; align-items: center; gap: 12px; }
     .logo-icon {
-      width: 36px; height: 36px; border-radius: 8px;
+      width: 34px; height: 34px; border-radius: 8px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
     }
-    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-    .logo-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+    .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .version-badge {
+      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+      background: rgba(139,92,246,0.15); color: #a78bfa;
+      font-family: monospace; letter-spacing: 0.5px;
+    }
     .run-btn {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      border: none;
-      padding: 10px 28px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      color: #fff; border: none; padding: 9px 24px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
       transition: opacity 0.2s, transform 0.1s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .run-btn:hover { opacity: 0.9; }
     .run-btn:active { transform: scale(0.97); }
-    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     /* ── Layout ── */
-    .main { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 73px); }
-    .pipeline-section {
-      padding: 32px 40px 24px;
-      border-bottom: 1px solid var(--border);
-    }
+    .layout { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 69px); overflow: hidden; }
+    .pipeline-section { padding: 24px 32px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-      margin-bottom: 24px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1.4px; color: var(--muted); margin-bottom: 20px;
     }
 
     /* ── Pipeline ── */
-    .pipeline {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      overflow-x: auto;
-      padding-bottom: 8px;
-    }
-
-    .node-wrap {
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
+    .pipeline { display: flex; align-items: center; gap: 0; }
+    .node-wrap { display: flex; align-items: center; flex-shrink: 0; }
     .node {
-      width: var(--node-w);
-      background: var(--surface2);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      cursor: pointer;
+      width: var(--node-w); background: var(--surface2);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 14px; cursor: pointer; position: relative; overflow: hidden;
       transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
-      position: relative;
-      overflow: hidden;
     }
     .node::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 0.4s;
-      border-radius: 14px;
+      content: ''; position: absolute; inset: 0; opacity: 0;
+      transition: opacity 0.4s; border-radius: 12px;
     }
-    .node.idle { border-color: var(--border); }
-    .node.running { border-color: var(--accent); box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+    .node.running { border-color: var(--accent); box-shadow: 0 0 20px rgba(59,130,246,0.25); }
     .node.running::before { background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.08), transparent 70%); opacity: 1; }
     .node.done { border-color: var(--green); }
-    .node.done::before { background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.06), transparent 70%); opacity: 1; }
-    .node.active-detail { box-shadow: 0 0 0 2px var(--accent2), 0 8px 32px rgba(139,92,246,0.2); }
+    .node.done::before { background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.05), transparent 70%); opacity: 1; }
+    .node.active-detail { box-shadow: 0 0 0 2px var(--accent2), 0 6px 24px rgba(139,92,246,0.2); }
     .node:hover { transform: translateY(-2px); }
-
-    .node-icon {
-      font-size: 22px;
-      margin-bottom: 10px;
-      display: block;
-    }
-    .node-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-    .node-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
-
-    .node-status {
-      position: absolute;
-      top: 10px; right: 10px;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--border);
+    .node-dot {
+      position: absolute; top: 10px; right: 10px;
+      width: 7px; height: 7px; border-radius: 50%; background: var(--border);
       transition: background 0.3s;
     }
-    .node.running .node-status { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
-    .node.done .node-status { background: var(--green); }
-
-    .node-time {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 8px;
-      font-variant-numeric: tabular-nums;
-      min-height: 14px;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.4); }
-    }
+    .node.running .node-dot { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+    .node.done .node-dot { background: var(--green); }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+    .node-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+    .node-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .node-role { font-size: 10px; color: var(--accent2); font-weight: 600; margin-bottom: 4px; font-style: italic; }
+    .node-desc { font-size: 10px; color: var(--muted); line-height: 1.4; }
+    .node-time { font-size: 10px; color: var(--muted); margin-top: 7px; min-height: 13px; font-variant-numeric: tabular-nums; }
 
     /* ── Connector ── */
-    .connector {
-      display: flex;
-      align-items: center;
-      width: 56px;
-      flex-shrink: 0;
-      position: relative;
-    }
+    .connector { display: flex; align-items: center; width: 48px; flex-shrink: 0; }
     .connector-line {
-      height: 2px;
-      flex: 1;
-      background: var(--border);
-      position: relative;
-      overflow: hidden;
-      border-radius: 2px;
+      height: 2px; flex: 1; background: var(--border);
+      border-radius: 2px; overflow: hidden; position: relative;
     }
     .connector-line::after {
-      content: '';
-      position: absolute;
-      left: -100%;
-      top: 0; bottom: 0;
-      width: 100%;
+      content: ''; position: absolute; left: -100%; top: 0; bottom: 0; width: 100%;
       background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      transition: left 0s;
     }
-    .connector-line.flowing::after {
-      animation: flow 0.6s ease-in-out forwards;
-    }
-    @keyframes flow {
-      from { left: -100%; }
-      to { left: 100%; }
-    }
+    .connector-line.flowing::after { animation: flow 0.5s ease-in-out forwards; }
+    @keyframes flow { from{left:-100%} to{left:100%} }
     .connector-arrow {
       width: 0; height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 7px solid var(--border);
-      transition: border-left-color 0.3s;
+      border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+      border-left: 6px solid var(--border); transition: border-left-color 0.3s;
     }
-    .connector-line.flowing + .connector-arrow { border-left-color: var(--accent); }
+
+    .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 14px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px; transition: width 0.4s ease;
+    }
 
     /* ── Bottom panels ── */
     .panels {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0;
-      overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      overflow: hidden; height: 100%;
     }
-    .panel {
-      padding: 24px 28px;
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-    }
+    .panel { padding: 20px 24px; border-right: 1px solid var(--border); overflow-y: auto; }
     .panel:last-child { border-right: none; }
     .panel-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 7px;
     }
-    .panel-title .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
+    .panel-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 
     /* ── Node detail ── */
-    .detail-placeholder {
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-      margin-top: 40px;
-      line-height: 1.6;
-    }
-    .detail-node-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .detail-icon { font-size: 28px; }
-    .detail-name { font-size: 17px; font-weight: 700; }
+    .placeholder { color: var(--muted); font-size: 12px; text-align: center; margin-top: 32px; line-height: 1.6; }
+    .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .detail-icon { font-size: 26px; }
+    .detail-name { font-size: 15px; font-weight: 700; }
+    .detail-role { font-size: 10px; color: var(--accent2); font-weight: 600; margin-top: 2px; font-style: italic; }
     .detail-badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 4px;
-      margin-top: 3px;
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 4px; margin-top: 4px;
+      background: rgba(16,185,129,0.15); color: var(--green);
     }
-    .badge-running { background: rgba(59,130,246,0.15); color: var(--accent); }
-    .badge-done { background: rgba(16,185,129,0.15); color: var(--green); }
-    .badge-idle { background: rgba(100,116,139,0.15); color: var(--muted); }
 
-    .kv-block { margin-bottom: 16px; }
-    .kv-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--muted);
-      margin-bottom: 6px;
+    .section-block { margin-bottom: 14px; }
+    .block-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;
     }
     .kv-table { width: 100%; border-collapse: collapse; }
-    .kv-table tr td {
-      padding: 6px 8px;
-      font-size: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .kv-table tr td:first-child {
-      color: var(--muted);
-      width: 45%;
-      font-weight: 500;
-    }
-    .kv-table tr td:last-child {
-      color: var(--text);
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 11px;
-      word-break: break-all;
-    }
-    .val-highlight {
-      background: rgba(16,185,129,0.12);
-      color: var(--green);
-      padding: 1px 5px;
-      border-radius: 3px;
-    }
-    .val-warn {
-      background: rgba(245,158,11,0.12);
-      color: var(--yellow);
-      padding: 1px 5px;
-      border-radius: 3px;
+    .kv-table td { padding: 5px 7px; font-size: 11px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .kv-table td:first-child { color: var(--muted); width: 42%; font-weight: 500; white-space: nowrap; }
+    .kv-table td:last-child { color: var(--text); font-family: 'SF Mono','Fira Code',monospace; font-size: 10.5px; word-break: break-all; }
+
+    .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+      font-family: monospace; background: rgba(59,130,246,0.12); color: #93c5fd;
     }
 
-    /* ── Action card ── */
+    .val-green { background: rgba(16,185,129,0.12); color: var(--green); padding: 1px 5px; border-radius: 3px; }
+    .val-yellow { background: rgba(245,158,11,0.12); color: var(--yellow); padding: 1px 5px; border-radius: 3px; }
+    .val-red { background: rgba(239,68,68,0.12); color: var(--red); padding: 1px 5px; border-radius: 3px; }
+
+    .confidence-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+    .confidence-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .confidence-fill.high { background: var(--green); }
+    .confidence-fill.low { background: var(--yellow); }
+
+    .reasoning-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px;
+      font-size: 10.5px; font-family: 'SF Mono','Fira Code',monospace;
+      color: #94a3b8; line-height: 1.6;
+    }
+
+    .check-row { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; font-size: 10.5px; line-height: 1.4; }
+    .check-icon { flex-shrink: 0; margin-top: 1px; }
+    .check-pass { color: var(--green); }
+    .check-fail { color: var(--red); }
+
+    /* ── Result panel ── */
     .action-card {
-      background: var(--surface2);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 14px;
+      font-family: 'SF Mono','Fira Code',monospace;
+      font-size: 11px; line-height: 1.75; white-space: pre-wrap;
       transition: border-color 0.3s;
     }
-    .action-card.success { border-color: var(--green); background: rgba(16,185,129,0.05); }
-    .action-card.review { border-color: var(--yellow); background: rgba(245,158,11,0.05); }
-    .action-card-text {
-      font-size: 14px;
-      line-height: 1.6;
-      font-weight: 500;
-    }
+    .action-card.success { border-color: var(--green); background: rgba(16,185,129,0.04); }
+    .action-card.review { border-color: var(--yellow); background: rgba(245,158,11,0.04); }
 
-    .stat-row {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-    }
+    .stat-row { display: flex; gap: 10px; margin-bottom: 14px; }
     .stat {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px; text-align: center;
     }
-    .stat-val { font-size: 20px; font-weight: 700; color: var(--accent); }
-    .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.6px; }
+    .stat-val { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 9px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* ── Trace log ── */
-    .trace-entry {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-      font-size: 11px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      line-height: 1.7;
+    /* ── Trace / compliance panel ── */
+    .trace-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 6px 12px; background: none; border: none; color: var(--muted);
+      cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s;
     }
-    .trace-node-badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    .trace-entry {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 10px 12px; margin-bottom: 8px;
+      font-size: 10.5px; font-family: 'SF Mono','Fira Code',monospace; line-height: 1.65;
+    }
+    .trace-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px; margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
     .badge-parser { background: rgba(139,92,246,0.2); color: #a78bfa; }
     .badge-healer { background: rgba(59,130,246,0.2); color: #60a5fa; }
     .badge-critic { background: rgba(245,158,11,0.2); color: #fbbf24; }
     .badge-messenger { background: rgba(16,185,129,0.2); color: #34d399; }
-
     .trace-kv { color: var(--muted); }
     .trace-kv span { color: var(--text); }
 
-    /* ── Empty states ── */
-    .empty-trace {
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-      padding: 32px 0;
+    .compliance-block {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 12px 14px; margin-bottom: 8px; font-size: 11px;
+    }
+    .compliance-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .latency-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 10.5px; border-bottom: 1px solid var(--border); }
+    .latency-row:last-child { border-bottom: none; }
+    .latency-node { color: var(--muted); }
+    .latency-val { font-family: monospace; color: var(--text); }
+
+    .kb-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px; font-size: 10px;
+      font-family: 'SF Mono','Fira Code',monospace; color: #94a3b8;
+      line-height: 1.6; white-space: pre-wrap; margin-top: 6px;
     }
 
-    /* ── Progress bar ── */
-    .progress-bar {
-      height: 2px;
-      background: var(--border);
-      border-radius: 2px;
-      margin-top: 16px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 2px;
-      transition: width 0.4s ease;
-      width: 0%;
-    }
+    .reasoning-path-entry { padding: 5px 0; font-size: 10.5px; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .reasoning-path-entry:last-child { border-bottom: none; }
+    .rp-node { font-weight: 700; color: var(--accent2); }
 
-    /* ── Confidence meter ── */
-    .confidence-bar {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-top: 6px;
-    }
-    .confidence-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.5s ease;
-    }
-    .confidence-fill.high { background: var(--green); }
-    .confidence-fill.low { background: var(--yellow); }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -405,150 +268,137 @@
   <div class="logo">
     <div class="logo-icon">🛡️</div>
     <div>
-      <div class="logo-text">GSentinel</div>
+      <div class="logo-name">GSentinel</div>
       <div class="logo-sub">Agentic Benefits Fulfillment Engine</div>
     </div>
   </div>
-  <button class="run-btn" id="runBtn" onclick="runPipeline()">
-    <span>▶</span> Run Agent Pipeline
-  </button>
+  <div class="header-right">
+    <span class="version-badge">v0.3 · RAG + Compliance Guard</span>
+    <button class="run-btn" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+  </div>
 </header>
 
-<div class="main">
-  <!-- Pipeline visualization -->
+<div class="layout">
   <div class="pipeline-section">
     <div class="section-label">Agent Pipeline</div>
     <div class="pipeline">
-      <!-- Parser -->
+
       <div class="node-wrap">
         <div class="node idle" id="node-parser" onclick="selectNode('parser')">
-          <div class="node-status"></div>
+          <div class="node-dot"></div>
           <span class="node-icon">🔍</span>
           <div class="node-name">Parser</div>
-          <div class="node-desc">Extracts employee ID, error code & field from carrier rejection</div>
+          <div class="node-role">RAG Extractor</div>
+          <div class="node-desc">Candidate scoring, KB lookup, error extraction</div>
           <div class="node-time" id="time-parser"></div>
         </div>
       </div>
-      <div class="node-wrap">
-        <div class="connector">
-          <div class="connector-line" id="conn-1"></div>
-          <div class="connector-arrow"></div>
-        </div>
-      </div>
-      <!-- Healer -->
+      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-1"></div><div class="connector-arrow"></div></div></div>
+
       <div class="node-wrap">
         <div class="node idle" id="node-healer" onclick="selectNode('healer')">
-          <div class="node-status"></div>
+          <div class="node-dot"></div>
           <span class="node-icon">🩺</span>
           <div class="node-name">Healer</div>
-          <div class="node-desc">Looks up correct value from internal HR database</div>
+          <div class="node-role">DB Lookup</div>
+          <div class="node-desc">Search depth audit, mismatch detection</div>
           <div class="node-time" id="time-healer"></div>
         </div>
       </div>
-      <div class="node-wrap">
-        <div class="connector">
-          <div class="connector-line" id="conn-2"></div>
-          <div class="connector-arrow"></div>
-        </div>
-      </div>
-      <!-- Critic -->
+      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-2"></div><div class="connector-arrow"></div></div></div>
+
       <div class="node-wrap">
         <div class="node idle" id="node-critic" onclick="selectNode('critic')">
-          <div class="node-status"></div>
+          <div class="node-dot"></div>
           <span class="node-icon">⚖️</span>
           <div class="node-name">Critic</div>
-          <div class="node-desc">Validates corrected value against enrollment schema</div>
+          <div class="node-role">Compliance Guard</div>
+          <div class="node-desc">3-check jailbreak & schema validation</div>
           <div class="node-time" id="time-critic"></div>
         </div>
       </div>
-      <div class="node-wrap">
-        <div class="connector">
-          <div class="connector-line" id="conn-3"></div>
-          <div class="connector-arrow"></div>
-        </div>
-      </div>
-      <!-- Messenger -->
+      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-3"></div><div class="connector-arrow"></div></div></div>
+
       <div class="node-wrap">
         <div class="node idle" id="node-messenger" onclick="selectNode('messenger')">
-          <div class="node-status"></div>
+          <div class="node-dot"></div>
           <span class="node-icon">📨</span>
           <div class="node-name">Messenger</div>
-          <div class="node-desc">Generates action card & sets fulfillment status</div>
+          <div class="node-role">Action Card</div>
+          <div class="node-desc">Product-led output with reason + confidence</div>
           <div class="node-time" id="time-messenger"></div>
         </div>
       </div>
-    </div>
 
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
     </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
 
-  <!-- Bottom panels -->
   <div class="panels">
-    <!-- Node detail -->
+    <!-- Panel 1: Node Detail -->
     <div class="panel">
-      <div class="panel-title"><span class="dot"></span> Node Detail</div>
-      <div id="nodeDetail">
-        <div class="detail-placeholder">
-          Click a node above or run the pipeline<br/>to inspect its inputs & outputs.
-        </div>
-      </div>
+      <div class="panel-title"><span class="panel-dot"></span>Node Detail</div>
+      <div id="nodeDetail"><div class="placeholder">Click a node or run the pipeline<br/>to inspect its inputs, outputs & reasoning.</div></div>
     </div>
 
-    <!-- Action card + stats -->
+    <!-- Panel 2: Result -->
     <div class="panel">
-      <div class="panel-title"><span class="dot" style="background:var(--green)"></span> Result</div>
-      <div id="resultPanel">
-        <div class="detail-placeholder">Run the pipeline to see the result.</div>
-      </div>
+      <div class="panel-title"><span class="panel-dot" style="background:var(--green)"></span>Result</div>
+      <div id="resultPanel"><div class="placeholder">Run the pipeline to see the action card.</div></div>
     </div>
 
-    <!-- Trace log -->
+    <!-- Panel 3: Trace + Compliance -->
     <div class="panel">
-      <div class="panel-title"><span class="dot" style="background:var(--accent2)"></span> Agent Trace</div>
-      <div id="tracePanel">
-        <div class="empty-trace">No trace yet — run the pipeline.</div>
+      <div class="panel-title"><span class="panel-dot" style="background:var(--accent2)"></span>Trace & Compliance</div>
+      <div class="trace-tabs">
+        <button class="tab-btn active" onclick="switchTab('trace', this)">Agent Trace</button>
+        <button class="tab-btn" onclick="switchTab('compliance', this)">Compliance</button>
+        <button class="tab-btn" onclick="switchTab('reasoning', this)">Reasoning Path</button>
       </div>
+      <div id="tab-trace"><div class="placeholder" style="margin-top:16px">No trace yet.</div></div>
+      <div id="tab-compliance" style="display:none"><div class="placeholder" style="margin-top:16px">Run the pipeline to see the compliance report.</div></div>
+      <div id="tab-reasoning" style="display:none"><div class="placeholder" style="margin-top:16px">No reasoning path yet.</div></div>
     </div>
   </div>
 </div>
 
 <script>
-  const NODE_ORDER = ['parser', 'healer', 'critic', 'messenger'];
+  const NODE_ORDER = ['parser','healer','critic','messenger'];
   const NODE_META = {
-    parser:    { icon: '🔍', label: 'Parser' },
-    healer:    { icon: '🩺', label: 'Healer' },
-    critic:    { icon: '⚖️', label: 'Critic' },
-    messenger: { icon: '📨', label: 'Messenger' },
+    parser:    { icon:'🔍', label:'Parser',    role:'RAG Extractor' },
+    healer:    { icon:'🩺', label:'Healer',    role:'DB Lookup' },
+    critic:    { icon:'⚖️', label:'Critic',    role:'Compliance Guard' },
+    messenger: { icon:'📨', label:'Messenger', role:'Action Card' },
+  };
+  const BADGE = {
+    parser: 'badge-parser', healer: 'badge-healer',
+    critic: 'badge-critic', messenger: 'badge-messenger',
   };
 
   let pipelineData = null;
   let selectedNode = null;
 
-  function setNodeState(name, state) {
+  function setNodeState(name, s) {
     const el = document.getElementById('node-' + name);
-    el.classList.remove('idle', 'running', 'done');
-    el.classList.add(state);
+    el.classList.remove('idle','running','done');
+    el.classList.add(s);
   }
-
   function flowConnector(id) {
     const el = document.getElementById('conn-' + id);
-    el.classList.remove('flowing');
-    void el.offsetWidth;
-    el.classList.add('flowing');
+    el.classList.remove('flowing'); void el.offsetWidth; el.classList.add('flowing');
   }
+  function setProgress(p) { document.getElementById('progressFill').style.width = p + '%'; }
+  function setTime(name, ms) { document.getElementById('time-' + name).textContent = ms + 'ms'; }
 
-  function setProgress(pct) {
-    document.getElementById('progressFill').style.width = pct + '%';
-  }
-
-  function setNodeTime(name, ms) {
-    document.getElementById('time-' + name).textContent = ms + 'ms';
+  function switchTab(tab, btn) {
+    ['trace','compliance','reasoning'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   }
 
   function selectNode(name) {
-    // deselect all
     NODE_ORDER.forEach(n => document.getElementById('node-' + n).classList.remove('active-detail'));
     document.getElementById('node-' + name).classList.add('active-detail');
     selectedNode = name;
@@ -557,160 +407,272 @@
 
   function renderNodeDetail(name) {
     if (!pipelineData) {
-      document.getElementById('nodeDetail').innerHTML = '<div class="detail-placeholder">Run the pipeline first.</div>';
+      document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Run the pipeline first.</div>';
       return;
     }
     const step = pipelineData.steps.find(s => s.node === name);
     if (!step) return;
-
     const meta = NODE_META[name];
-    const statusClass = step ? 'done' : 'idle';
 
-    let html = `
-      <div class="detail-node-header">
+    let h = `
+      <div class="detail-header">
         <div class="detail-icon">${meta.icon}</div>
         <div>
           <div class="detail-name">${meta.label}</div>
-          <span class="detail-badge badge-done">Completed in ${step.duration_ms}ms</span>
+          <div class="detail-role">${meta.role}</div>
+          <span class="detail-badge">Completed in ${step.duration_ms}ms</span>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    html += `<div class="kv-block"><div class="kv-label">Inputs</div><table class="kv-table">`;
+    // Inputs
+    h += `<div class="section-block"><div class="block-label">Inputs</div><table class="kv-table">`;
     for (const [k, v] of Object.entries(step.inputs)) {
-      const val = typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + '…' : v;
-      html += `<tr><td>${k}</td><td>${val ?? '—'}</td></tr>`;
+      const disp = typeof v === 'string' && v.length > 70 ? v.slice(0,70)+'…' : JSON.stringify(v) ?? '—';
+      h += `<tr><td>${k}</td><td>${disp}</td></tr>`;
     }
-    html += `</table></div>`;
+    h += `</table></div>`;
 
-    html += `<div class="kv-block"><div class="kv-label">Outputs</div><table class="kv-table">`;
-    for (const [k, v] of Object.entries(step.outputs)) {
-      let display = v;
-      if (k === 'corrected_value') display = `<span class="val-highlight">${v}</span>`;
-      if (k === 'confidence_score') {
-        const pct = Math.round(v * 100);
-        const cls = v >= 0.9 ? 'high' : 'low';
-        display = `${pct}%<div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div>`;
+    // Outputs — special rendering per node
+    h += `<div class="section-block"><div class="block-label">Outputs</div>`;
+    if (name === 'parser') {
+      h += renderParserOutputs(step.outputs);
+    } else if (name === 'healer') {
+      h += renderHealerOutputs(step.outputs);
+    } else if (name === 'critic') {
+      h += renderCriticOutputs(step.outputs);
+    } else {
+      h += `<table class="kv-table">`;
+      for (const [k, v] of Object.entries(step.outputs)) {
+        const disp = k === 'status'
+          ? (v === 'AUTO_FIXED' ? `<span class="val-green">${v}</span>` : `<span class="val-yellow">${v}</span>`)
+          : (JSON.stringify(v) ?? '—');
+        h += `<tr><td>${k}</td><td>${disp}</td></tr>`;
       }
-      if (k === 'valid') display = v ? `<span class="val-highlight">✓ Valid</span>` : `<span class="val-warn">✗ Invalid</span>`;
-      if (k === 'status') display = v === 'AUTO_FIXED' ? `<span class="val-highlight">${v}</span>` : `<span class="val-warn">${v}</span>`;
-      html += `<tr><td>${k}</td><td>${display ?? '—'}</td></tr>`;
+      h += `</table>`;
     }
-    html += `</table></div>`;
+    h += `</div>`;
 
-    document.getElementById('nodeDetail').innerHTML = html;
+    // Reasoning
+    if (step.reasoning) {
+      h += `<div class="section-block"><div class="block-label">Internal Reasoning</div>
+        <div class="reasoning-box">${step.reasoning.replace(/\[.*?\]\s*/, '')}</div></div>`;
+    }
+
+    document.getElementById('nodeDetail').innerHTML = h;
+  }
+
+  function renderParserOutputs(o) {
+    let h = `<table class="kv-table">
+      <tr><td>employee_id</td><td><span class="val-green">${o.employee_id}</span></td></tr>
+      <tr><td>error_code</td><td>${o.error_code}</td></tr>
+      <tr><td>field_affected</td><td>${o.field_affected}</td></tr>
+      <tr><td>submitted_value</td><td><span class="val-yellow">${o.submitted_value}</span></td></tr>
+      <tr><td>kb_evidence</td><td>${o.kb_evidence_chars} chars retrieved</td></tr>
+    </table>`;
+    if (o.top_candidates) {
+      h += `<div style="margin-top:10px"><div class="block-label">RAG Candidates</div>
+        <div style="margin-bottom:5px;font-size:10px;color:var(--muted)">Employee IDs found:</div>
+        <div class="tag-list">${o.top_candidates.employee_ids.map(id => `<span class="tag">${id}</span>`).join('')}</div>
+        <div style="margin:6px 0 5px;font-size:10px;color:var(--muted)">Error codes found:</div>
+        <div class="tag-list">${o.top_candidates.error_codes.map(c => `<span class="tag">${c}</span>`).join('')}</div>
+      </div>`;
+    }
+    if (o.error_description) {
+      h += `<div style="margin-top:10px"><div class="block-label">KB Evidence</div>
+        <div class="kb-box">${o.error_description}</div></div>`;
+    }
+    return h;
+  }
+
+  function renderHealerOutputs(o) {
+    let h = `<table class="kv-table">
+      <tr><td>corrected_value</td><td><span class="val-green">${o.corrected_value}</span></td></tr>
+      <tr><td>match_index</td><td>Record[${o.match_index}]</td></tr>
+      <tr><td>source</td><td>${o.source}</td></tr>
+    </table>`;
+    if (o.mismatch_log) {
+      h += `<div style="margin-top:10px"><div class="block-label">Mismatch Log</div>
+        <div class="reasoning-box">${o.mismatch_log}</div></div>`;
+    }
+    if (o.search_depth && o.search_depth.length) {
+      h += `<div style="margin-top:10px"><div class="block-label">Search Depth (${o.search_depth.length} records)</div>`;
+      o.search_depth.forEach(row => {
+        const isMatch = row.includes('MATCH');
+        h += `<div class="check-row"><span class="check-icon ${isMatch ? 'check-pass' : ''}">${isMatch ? '✓' : '○'}</span>
+          <span style="color:${isMatch ? 'var(--green)' : 'var(--muted)'}">${row}</span></div>`;
+      });
+      h += `</div>`;
+    }
+    return h;
+  }
+
+  function renderCriticOutputs(o) {
+    const pct = Math.round((o.confidence_score || 0) * 100);
+    const cls = o.valid ? 'high' : 'low';
+    let h = `<table class="kv-table">
+      <tr><td>pattern_tested</td><td style="font-family:monospace">${o.pattern_tested}</td></tr>
+      <tr><td>checks_passed</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
+      <tr><td>confidence</td><td>${pct}%<div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div></td></tr>
+      <tr><td>valid</td><td>${o.valid ? '<span class="val-green">✓ PASS</span>' : '<span class="val-yellow">⚠ FAIL</span>'}</td></tr>
+    </table>`;
+    if (o.validation_log && o.validation_log.length) {
+      h += `<div style="margin-top:10px"><div class="block-label">Validation Log</div>`;
+      o.validation_log.forEach(entry => {
+        const pass = entry.includes('→ PASS');
+        h += `<div class="check-row">
+          <span class="check-icon ${pass ? 'check-pass' : 'check-fail'}">${pass ? '✓' : '✗'}</span>
+          <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+      });
+      h += `</div>`;
+    }
+    if (o.summary) {
+      h += `<div style="margin-top:8px" class="reasoning-box">${o.summary}</div>`;
+    }
+    return h;
   }
 
   function renderResult(data) {
-    const isSuccess = data.status === 'AUTO_FIXED';
-    const cardClass = isSuccess ? 'success' : 'review';
-
-    let html = `
-      <div class="action-card ${cardClass}">
-        <div class="action-card-text">${data.action_card}</div>
-      </div>
+    const ok = data.status === 'AUTO_FIXED';
+    const cr = data.compliance_report || {};
+    let h = `
+      <div class="action-card ${ok ? 'success' : 'review'}">${data.action_card}</div>
       <div class="stat-row">
-        <div class="stat">
-          <div class="stat-val">${data.confidence_score * 100}%</div>
-          <div class="stat-label">Confidence</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val">${data.total_ms}ms</div>
-          <div class="stat-label">Total time</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val">${data.status === 'AUTO_FIXED' ? '✓' : '!'}</div>
-          <div class="stat-label">${data.status}</div>
-        </div>
+        <div class="stat"><div class="stat-val">${Math.round(data.confidence_score*100)}%</div><div class="stat-label">Confidence</div></div>
+        <div class="stat"><div class="stat-val">${cr.total_ms || data.total_ms}ms</div><div class="stat-label">Total</div></div>
+        <div class="stat"><div class="stat-val">${cr.checks_passed ?? '?'}/${cr.checks_total ?? 3}</div><div class="stat-label">Checks</div></div>
       </div>
-    `;
-
-    html += `
-      <div style="margin-top:20px">
-        <div class="kv-label">Correction Summary</div>
-        <table class="kv-table" style="margin-top:8px">
+      <div class="section-block"><div class="block-label">Correction</div>
+        <table class="kv-table">
           <tr><td>Employee</td><td>${data.employee_id}</td></tr>
           <tr><td>Error code</td><td>${data.error_code}</td></tr>
-          <tr><td>Submitted value</td><td><span class="val-warn">${data.submitted_value}</span></td></tr>
-          <tr><td>Corrected value</td><td><span class="val-highlight">${data.corrected_value}</span></td></tr>
+          <tr><td>Submitted</td><td><span class="val-yellow">${data.submitted_value}</span></td></tr>
+          <tr><td>Corrected</td><td><span class="val-green">${data.corrected_value}</span></td></tr>
+          <tr><td>Status</td><td>${ok ? '<span class="val-green">AUTO_FIXED</span>' : '<span class="val-yellow">HUMAN_REVIEW</span>'}</td></tr>
         </table>
-      </div>
-    `;
-
-    document.getElementById('resultPanel').innerHTML = html;
+      </div>`;
+    document.getElementById('resultPanel').innerHTML = h;
   }
 
   function renderTrace(steps) {
-    const badgeClass = { parser: 'badge-parser', healer: 'badge-healer', critic: 'badge-critic', messenger: 'badge-messenger' };
-    let html = '';
-    for (const step of steps) {
-      const bc = badgeClass[step.node] || '';
-      html += `<div class="trace-entry">`;
-      html += `<div><span class="trace-node-badge ${bc}">${step.node}</span></div>`;
-      for (const [k, v] of Object.entries(step.trace)) {
+    let h = '';
+    steps.forEach(step => {
+      const bc = BADGE[step.node] || '';
+      h += `<div class="trace-entry"><span class="trace-badge ${bc}">${step.node}</span>`;
+      const t = step.trace || {};
+      for (const [k, v] of Object.entries(t)) {
         if (k === 'node') continue;
-        const val = typeof v === 'string' && v.length > 80 ? v.slice(0, 80) + '…' : JSON.stringify(v);
-        html += `<div class="trace-kv">${k}: <span>${val}</span></div>`;
+        if (Array.isArray(v)) {
+          h += `<div class="trace-kv">${k}: <span>[${v.length} entries]</span></div>`;
+        } else {
+          const display = typeof v === 'string' && v.length > 80 ? v.slice(0,80)+'…' : JSON.stringify(v);
+          h += `<div class="trace-kv">${k}: <span>${display}</span></div>`;
+        }
       }
-      html += `</div>`;
+      h += `</div>`;
+    });
+    document.getElementById('tab-trace').innerHTML = h || '<div class="placeholder">No trace.</div>';
+  }
+
+  function renderCompliance(cr) {
+    if (!cr) return;
+    const lat = cr.latency_ms || {};
+    const nodes = [['parser','RAG Extractor'],['healer','DB Lookup'],['critic','Compliance Guard'],['messenger','Action Card']];
+    let h = `<div class="compliance-block"><div class="compliance-title">Node Latencies</div>`;
+    nodes.forEach(([n, role]) => {
+      if (lat[n] != null) {
+        h += `<div class="latency-row"><span class="latency-node">${n} <span style="color:var(--accent2);font-size:9px">(${role})</span></span><span class="latency-val">${lat[n]}ms</span></div>`;
+      }
+    });
+    h += `<div class="latency-row" style="font-weight:600"><span class="latency-node">total</span><span class="latency-val">${cr.total_ms}ms</span></div></div>`;
+
+    h += `<div class="compliance-block"><div class="compliance-title">Compliance Checks (${cr.checks_passed}/${cr.checks_total})</div>`;
+    (cr.validation_log || []).forEach(entry => {
+      const pass = entry.includes('→ PASS');
+      h += `<div class="check-row"><span class="check-icon ${pass ? 'check-pass' : 'check-fail'}">${pass ? '✓' : '✗'}</span>
+        <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+    });
+    h += `</div>`;
+
+    h += `<div class="compliance-block"><div class="compliance-title">Mismatch Detection</div>
+      <div class="kb-box">${cr.mismatch_log || 'n/a'}</div></div>`;
+
+    h += `<div class="compliance-block"><div class="compliance-title">KB Evidence (${cr.kb_evidence_chars} chars)</div>
+      <div class="kb-box">${(cr.kb_evidence || '').slice(0, 300)}${(cr.kb_evidence || '').length > 300 ? '…' : ''}</div></div>`;
+
+    document.getElementById('tab-compliance').innerHTML = h;
+  }
+
+  function renderReasoningPath(path) {
+    if (!path || !path.length) {
+      document.getElementById('tab-reasoning').innerHTML = '<div class="placeholder" style="margin-top:16px">No reasoning path.</div>';
+      return;
     }
-    document.getElementById('tracePanel').innerHTML = html || '<div class="empty-trace">No trace entries.</div>';
+    let h = '';
+    path.forEach((entry, i) => {
+      const nodeMatch = entry.match(/^\[(\w+)\]\s*(.*)/s);
+      const nodeName = nodeMatch ? nodeMatch[1] : 'Node';
+      const text = nodeMatch ? nodeMatch[2] : entry;
+      h += `<div class="reasoning-path-entry">
+        <div style="margin-bottom:4px"><span class="rp-node">[${nodeName}]</span> <span style="font-size:9px;color:var(--muted)">step ${i+1}</span></div>
+        <div style="font-size:10.5px;color:#94a3b8;line-height:1.5">${text}</div>
+      </div>`;
+    });
+    document.getElementById('tab-reasoning').innerHTML = h;
   }
 
   async function runPipeline() {
     const btn = document.getElementById('runBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span style="animation:pulse 1s infinite">⏳</span> Running…';
+    btn.innerHTML = '⏳ Running…';
 
-    // Reset
-    NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
-    ['conn-1','conn-2','conn-3'].forEach(id => {
-      document.getElementById(id).classList.remove('flowing');
-    });
-    NODE_ORDER.forEach(n => document.getElementById('time-' + n).textContent = '');
+    NODE_ORDER.forEach(n => { setNodeState(n, 'idle'); document.getElementById('time-' + n).textContent = ''; });
+    ['conn-1','conn-2','conn-3'].forEach(id => document.getElementById(id).classList.remove('flowing'));
     setProgress(0);
-    document.getElementById('nodeDetail').innerHTML = '<div class="detail-placeholder">Pipeline running…</div>';
-    document.getElementById('resultPanel').innerHTML = '<div class="detail-placeholder">Running…</div>';
-    document.getElementById('tracePanel').innerHTML = '<div class="empty-trace">Collecting trace…</div>';
+    document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Pipeline running…</div>';
+    document.getElementById('resultPanel').innerHTML = '<div class="placeholder">Running…</div>';
+    document.getElementById('tab-trace').innerHTML = '<div class="placeholder" style="margin-top:16px">Collecting trace…</div>';
+
+    // Animate nodes running (staggered, matches ~500ms sleep per node)
+    const DELAYS = [0, 600, 1200, 1700];
+    NODE_ORDER.forEach((n, i) => {
+      setTimeout(() => {
+        setNodeState(n, 'running');
+        setProgress((i + 1) * 18);
+        if (i > 0) flowConnector(i);
+      }, DELAYS[i]);
+    });
 
     try {
-      // Animate running states sequentially for visual effect
-      const DELAYS = [0, 300, 600, 900];
-      NODE_ORDER.forEach((n, i) => {
-        setTimeout(() => {
-          setNodeState(n, 'running');
-          setProgress((i + 1) * 20);
-          if (i > 0) flowConnector(i);
-        }, DELAYS[i]);
-      });
-
       const res = await fetch('/api/run');
       const data = await res.json();
       pipelineData = data;
 
-      // Mark all done with timing
+      // Settle all nodes to done
       NODE_ORDER.forEach((n, i) => {
         setTimeout(() => {
           setNodeState(n, 'done');
           const step = data.steps.find(s => s.node === n);
-          if (step) setNodeTime(n, step.duration_ms);
+          if (step) setTime(n, step.duration_ms);
           if (i === NODE_ORDER.length - 1) {
             flowConnector(3);
             setProgress(100);
             renderResult(data);
             renderTrace(data.steps);
+            renderCompliance(data.compliance_report);
+            renderReasoningPath(data.reasoning_path);
             if (selectedNode) renderNodeDetail(selectedNode);
             btn.disabled = false;
-            btn.innerHTML = '<span>▶</span> Run Again';
+            btn.innerHTML = '▶ Run Again';
           }
-        }, DELAYS[i] + 200);
+        }, DELAYS[i] + 150);
       });
 
     } catch (err) {
       btn.disabled = false;
-      btn.innerHTML = '<span>▶</span> Run Agent Pipeline';
+      btn.innerHTML = '▶ Run Pipeline';
       NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
-      document.getElementById('resultPanel').innerHTML = `<div class="detail-placeholder" style="color:var(--red)">Error: ${err.message}<br/>Is the API server running?</div>`;
+      document.getElementById('resultPanel').innerHTML =
+        `<div class="placeholder" style="color:var(--red)">Error: ${err.message}<br/>Is the API server running?</div>`;
     }
   }
 </script>
