@@ -185,6 +185,7 @@ The visual interface (`http://localhost:8000`) shows the full pipeline in real t
 
 ## Docs
 
+- [`docs/prd.md`](docs/prd.md) — Product Requirements Document: business problem, market analysis, competitive landscape, OKRs, release plan
 - [`CLAUDE.md`](CLAUDE.md) — Build spec: hard rules, node contracts, pipeline definition
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — Branching strategy, commit format, PR process
 - [`CHANGELOG.md`](CHANGELOG.md) — Versioned change history

@@ -8,6 +8,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added
+- `docs/prd.md` — VP-level Product Requirements Document with market sizing, competitor analysis, OKRs, and 4-phase release plan
+
 ---
 
 ## [0.2.0] — 2026-04-19
