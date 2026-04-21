@@ -27,7 +27,8 @@
       },
       "plan": "SILVER_HMO",
       "dependents": [
-        { "name": "Casey Smith", "dob": "2019-11-05", "relation": "child" }
+        { "name": "Casey Smith", "dob": "2019-11-05", "relation": "child" },
+        { "name": "Riley Smith", "dob": "2021-13-40", "relation": "child" }
       ]
     },
     {
@@ -42,7 +43,9 @@
         "zip": "97201"
       },
       "plan": "BRONZE_EPO",
-      "dependents": []
+      "dependents": [],
+      "duplicate_flag": true,
+      "duplicate_of": "EMP003-A"
     }
   ]
 }

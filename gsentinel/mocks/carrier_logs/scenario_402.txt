@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-19
+Group ID: GRP-00142
+---
+RECORD: EMP002 | Jordan Smith
+ERROR CODE: 402
+FIELD: address.zip
+SUBMITTED VALUE: "8020"
+MESSAGE: Zip code must be exactly 5 digits. Enrollment rejected pending correction.
+---
+END OF REJECTION NOTICE

@@ -1,0 +1,12 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP003 | Morgan Lee
+ERROR CODE: 501
+FIELD: enrollment_id
+SUBMITTED VALUE: "EMP003"
+MESSAGE: Duplicate enrollment detected. This employee ID was already submitted
+in the current enrollment window.
+---
+END OF REJECTION NOTICE
