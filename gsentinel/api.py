@@ -42,13 +42,13 @@ MOCK_QUEUE = [
     },
     {
         "id": "REJ-005", "employee_id": "EMP003", "employee_name": "Morgan Lee",
-        "error_code": "610", "field": "ssn_last4", "status": "PENDING",
-        "scenario_file": None, "timestamp": "2026-04-20T10:12:00Z",
+        "error_code": "610", "field": "ssn_last4", "status": "AUTO_FIXED",
+        "scenario_file": "scenario_610.txt", "timestamp": "2026-04-20T10:12:00Z",
     },
     {
         "id": "REJ-006", "employee_id": "EMP001", "employee_name": "Alex Rivera",
-        "error_code": "308", "field": "plan_code", "status": "PENDING",
-        "scenario_file": None, "timestamp": "2026-04-20T10:58:00Z",
+        "error_code": "308", "field": "plan_code", "status": "AUTO_FIXED",
+        "scenario_file": "scenario_308.txt", "timestamp": "2026-04-20T10:58:00Z",
     },
 ]
 

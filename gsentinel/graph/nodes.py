@@ -136,10 +136,20 @@ def healer_node(state: dict) -> dict:
 
         elif code == "610":
             corrected = emp["ssn_last4"]
+            submitted = state["submitted_value"] or ""
             mismatch_log = (
                 f"Record[{match_index}].ssn_last4 = '{corrected}' | "
-                f"Carrier submitted '{state['submitted_value']}' → "
-                f"{'MISMATCH — SSN format error' if corrected != state['submitted_value'] else 'values equal'}"
+                f"Carrier submitted '{submitted}' ({len(submitted)} digit(s)) → "
+                f"{'MISMATCH — expected 4 digits, got ' + str(len(submitted)) if corrected != submitted else 'values equal, no change'}"
+            )
+
+        elif code == "308":
+            corrected = emp["plan"]
+            submitted = state["submitted_value"] or ""
+            mismatch_log = (
+                f"Record[{match_index}].plan = '{corrected}' | "
+                f"Carrier submitted '{submitted}' → "
+                f"{'MISMATCH — not a recognized carrier plan code' if corrected != submitted else 'values equal, no change'}"
             )
 
     state["corrected_value"] = corrected
@@ -149,9 +159,27 @@ def healer_node(state: dict) -> dict:
         state["confidence_score"] = healer_override_confidence
 
     if code == "415" and healer_override_confidence == 0.5:
-        reasoning_detail = "Dependent DOB in HR record is also malformed. Cannot auto-correct. Routing to human review."
+        bad_dep_name = "unknown dependent"
+        bad_dep_dob = corrected or state["submitted_value"] or "unknown"
+        if emp:
+            for dep in emp.get("dependents", []):
+                if not _VALID_DOB.match(dep.get("dob", "")):
+                    bad_dep_name = dep["name"]
+                    bad_dep_dob = dep["dob"]
+                    month_val = bad_dep_dob.split("-")[1] if "-" in bad_dep_dob else "?"
+                    break
+        reasoning_detail = (
+            f"Dependent '{bad_dep_name}' has DOB '{bad_dep_dob}' in HR records. "
+            f"Month value '{month_val}' exceeds valid range 01-12 — source data is malformed. "
+            f"HR admin must correct the dependent's DOB before auto-fix is possible. Cannot auto-correct."
+        )
     elif code == "501":
-        reasoning_detail = f"Duplicate enrollment detected. {emp.get('name', target_id)} flagged as duplicate of {emp.get('duplicate_of', 'unknown')}. Human must determine which record to retain."
+        dup_of = emp.get("duplicate_of", "unknown") if emp else "unknown"
+        reasoning_detail = (
+            f"EMP003 carries duplicate_flag=True — flagged as a duplicate of {dup_of}. "
+            f"Two active records exist in the same enrollment window. "
+            f"HR must determine which record to retain and remove the duplicate before resubmitting. Cannot auto-correct."
+        )
     else:
         reasoning_detail = mismatch_log or f"No correctable field found for error code {code}."
 
@@ -219,6 +247,7 @@ def critic_node(state: dict) -> dict:
         "402": schema["zip_format"],
         "415": r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$",
         "610": schema["ssn_last4_format"],
+        "308": schema["plan_code_format"],
     }
 
     BLOCKED_VALUES = {"00000", "99999", "11111", "12345", "00001"}
@@ -238,8 +267,9 @@ def critic_node(state: dict) -> dict:
 
     numeric_codes = {"402", "610"}
     check3 = value.isdigit() if code in numeric_codes else True
+    label3 = "all-numeric check" if code in numeric_codes else "non-numeric field — injection guard skipped"
     validation_log.append(
-        f"Check 3 — Injection guard: value '{value}' is all-numeric → {'PASS' if check3 else 'FAIL — non-numeric chars detected'}"
+        f"Check 3 — Injection guard: {label3} → {'PASS' if check3 else 'FAIL — non-numeric chars detected'}"
     )
 
     all_pass = check1 and check2 and check3
@@ -298,15 +328,30 @@ def messenger_node(state: dict) -> dict:
     checks_passed = checks_entry.get("checks_passed", "?")
     checks_total = checks_entry.get("checks_total", 3)
 
+    reason_detail = {
+        "402": (
+            f"Zip code submitted was {len(original or '')} digit(s); "
+            f"5-digit USPS format required. "
+            f"Corrected from authoritative HR record."
+        ),
+        "610": (
+            f"SSN last 4 submitted was {len(original or '')} digit(s); "
+            f"exactly 4 required. "
+            f"Corrected from authoritative HR record."
+        ),
+        "308": (
+            f"Plan code '{original}' is not a recognized carrier plan. "
+            f"Corrected to '{corrected}' from authoritative HR record."
+        ),
+    }.get(error_code, f"Submitted value corrected from authoritative HR record.")
+
     if score >= 0.9:
         state["action_card"] = (
             f"✅ Enrollment Correction — AUTO_FIXED\n\n"
             f"  Field:           {field}\n"
             f"  Change:          {original} → {corrected}\n"
             f"  Employee:        {name} ({emp_id})\n\n"
-            f"  Reason:          Error {error_code} — the value submitted to the carrier was\n"
-            f"                   {len(original)} digit(s), but {len(corrected)} are required.\n"
-            f"                   Corrected from the authoritative HR record.\n\n"
+            f"  Reason:          Error {error_code} — {reason_detail}\n\n"
             f"  Confidence:      {round(score * 100)}% — passed {checks_passed}/{checks_total} compliance checks.\n\n"
             f"  No action needed. Record is ready for resubmission."
         )

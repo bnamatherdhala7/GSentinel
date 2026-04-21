@@ -282,6 +282,45 @@
     .resolve-msg.confirmed { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: var(--green); }
     .resolve-msg.escalated { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25); color: #a78bfa; }
 
+    /* ── HR Agent Findings ── */
+    .hr-section-title {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin: 12px 0 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .hr-section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .reasoning-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+    .reasoning-step {
+      display: flex; gap: 8px; align-items: flex-start;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 5px; padding: 7px 9px;
+    }
+    .step-node-tag {
+      font-size: 8px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.6px; padding: 2px 5px; border-radius: 3px;
+      white-space: nowrap; flex-shrink: 0; margin-top: 1px;
+    }
+    .tag-parser  { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .tag-healer  { background: rgba(16,185,129,0.15); color: var(--green); }
+    .tag-critic  { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .tag-messenger { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .step-text {
+      font-size: 10px; color: #94a3b8; line-height: 1.55;
+      font-family: 'SF Mono','Fira Code',monospace;
+    }
+    .check-rows { display: flex; flex-direction: column; gap: 3px; }
+    .check-row {
+      display: flex; gap: 6px; align-items: flex-start;
+      font-size: 10px; font-family: 'SF Mono','Fira Code',monospace;
+      color: #94a3b8; line-height: 1.45;
+    }
+    .check-icon { flex-shrink: 0; }
+    .check-icon.pass { color: var(--green); }
+    .check-icon.fail { color: var(--red); }
+    .check-icon.skip { color: var(--muted); }
+
     /* ── Trace panel ── */
     .trace-tabs { display: flex; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
     .tab-btn { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 10px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
@@ -662,19 +701,59 @@
       ? `<button class="hr-btn btn-confirm" id="btnConfirm" onclick="resolveAction('confirm')">✓ Confirm Fix</button>`
       : '';
 
+    // Agent reasoning steps
+    const nodeTagMap = { Parser: 'parser', Healer: 'healer', Critic: 'critic', Messenger: 'messenger' };
+    const reasoningHtml = (data.reasoning_path || []).map(entry => {
+      const match = entry.match(/^\[(\w+)\]\s*(.*)/s);
+      const node = match ? match[1] : 'Agent';
+      const text = match ? match[2] : entry;
+      const tagClass = 'tag-' + node.toLowerCase();
+      return `<div class="reasoning-step">
+        <span class="step-node-tag ${tagClass}">${node}</span>
+        <span class="step-text">${escapeHtml(text)}</span>
+      </div>`;
+    }).join('');
+
+    // Compliance checks
+    const vlog = (data.compliance_report || {}).validation_log || [];
+    const checksHtml = vlog.length ? vlog.map(line => {
+      const isPass = line.includes('→ PASS');
+      const isSkip = line.includes('Skipped') || line.includes('skipping');
+      const icon = isSkip ? '—' : isPass ? '✓' : '✗';
+      const cls = isSkip ? 'skip' : isPass ? 'pass' : 'fail';
+      return `<div class="check-row"><span class="check-icon ${cls}">${icon}</span><span>${escapeHtml(line)}</span></div>`;
+    }).join('') : '<div class="check-row"><span class="check-icon skip">—</span><span>Validation skipped — healer pre-flagged as non-fixable.</span></div>';
+
+    // Healer mismatch log
+    const mismatch = (data.compliance_report || {}).mismatch_log || '';
+
     let h = `<div class="hr-card" id="hrCard">
       <div class="hr-card-header">⚠️ Human Review Required</div>
+
       <table class="kv-table">
         <tr><td>Field</td><td>${data.field_affected || '—'}</td></tr>
         <tr><td>Employee</td><td>${data.employee_id}</td></tr>
-        <tr><td>Issue</td><td>${(data.error_description || '').split('.')[0]}</td></tr>
-        <tr><td>Suggested</td><td>${hasCorrection ? `<span class="val-yellow">${data.corrected_value}</span>` : 'No auto-correction available'}</td></tr>
+        <tr><td>Error</td><td>E-${data.error_code} — ${(data.error_description || '').split('.')[0]}</td></tr>
+        <tr><td>Submitted</td><td><span class="val-yellow">${data.submitted_value || '—'}</span></td></tr>
+        <tr><td>Suggested</td><td>${hasCorrection ? `<span class="val-yellow">${data.corrected_value}</span>` : '<span style="color:var(--muted)">No auto-correction available</span>'}</td></tr>
+        <tr><td>Confidence</td><td>${Math.round((data.confidence_score || 0) * 100)}% — below 90% threshold</td></tr>
       </table>
+
       <div class="hr-reason">${data.action_card}</div>
+
+      ${mismatch ? `<div class="hr-section-title">Healer Finding</div>
+      <div class="hr-reason" style="margin:0 0 4px">${escapeHtml(mismatch)}</div>` : ''}
+
+      <div class="hr-section-title">Compliance Checks</div>
+      <div class="check-rows">${checksHtml}</div>
+
+      <div class="hr-section-title">Agent Reasoning Path</div>
+      <div class="reasoning-list">${reasoningHtml || '<div class="check-row"><span class="check-icon skip">—</span><span>No reasoning available.</span></div>'}</div>
+
       <div id="overrideRow" style="display:none" class="override-row">
         <input class="override-input" id="overrideInput" type="text"
           placeholder="Enter corrected value"
-          value="${hasCorrection ? data.corrected_value : ''}"/>
+          value="${hasCorrection ? (data.corrected_value || '') : ''}"/>
         <button class="override-submit" onclick="submitOverride()">Submit</button>
       </div>
       <div class="hr-actions">
@@ -684,6 +763,10 @@
       </div>
     </div>`;
     document.getElementById('resultPanel').innerHTML = h;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   function toggleOverride() {

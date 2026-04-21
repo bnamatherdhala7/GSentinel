@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP001 | Alex Rivera
+ERROR CODE: 308
+FIELD: plan_code
+SUBMITTED VALUE: "GLD_PPO"
+MESSAGE: Plan code does not match any active carrier plan for this group. Verify against current carrier contract.
+---
+END OF REJECTION NOTICE

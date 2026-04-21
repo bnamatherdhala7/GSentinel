@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP003 | Morgan Lee
+ERROR CODE: 610
+FIELD: ssn_last4
+SUBMITTED VALUE: "910"
+MESSAGE: SSN last 4 is malformed. Must be exactly 4 numeric digits. Enrollment rejected pending correction.
+---
+END OF REJECTION NOTICE
