@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP002 | Jordan Smith
+ERROR CODE: 415
+FIELD: dependents[1].dob
+SUBMITTED VALUE: "2021-13-40"
+MESSAGE: Dependent date of birth is invalid. Must be YYYY-MM-DD format.
+---
+END OF REJECTION NOTICE

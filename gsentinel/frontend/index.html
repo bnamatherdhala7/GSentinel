@@ -18,91 +18,149 @@
       --teal: #06b6d4;
       --text: #e2e8f0;
       --muted: #64748b;
-      --node-w: 172px;
+      --node-w: 162px;
+      --queue-w: 272px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
       font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      min-height: 100vh;
+      height: 100vh; overflow: hidden; display: flex; flex-direction: column;
     }
 
     /* ── Header ── */
     header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      padding: 14px 24px; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
     }
-    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon {
-      width: 34px; height: 34px; border-radius: 8px;
+      width: 32px; height: 32px; border-radius: 8px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center; font-size: 17px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
     }
-    .logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
-    .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
+    .logo-name { font-size: 17px; font-weight: 700; letter-spacing: -0.4px; }
+    .logo-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
     .version-badge {
       font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
-      background: rgba(139,92,246,0.15); color: #a78bfa;
-      font-family: monospace; letter-spacing: 0.5px;
+      background: rgba(139,92,246,0.15); color: #a78bfa; font-family: monospace;
     }
     .run-btn {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff; border: none; padding: 9px 24px; border-radius: 8px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; gap: 7px;
+      color: #fff; border: none; padding: 8px 20px; border-radius: 7px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
       transition: opacity 0.2s, transform 0.1s;
     }
     .run-btn:hover { opacity: 0.9; }
     .run-btn:active { transform: scale(0.97); }
     .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* ── Layout ── */
-    .layout { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 69px); overflow: hidden; }
-    .pipeline-section { padding: 24px 32px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .section-label {
-      font-size: 10px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1.4px; color: var(--muted); margin-bottom: 20px;
+    /* ── Metric bar ── */
+    .metric-bar {
+      display: flex; align-items: center; gap: 0;
+      padding: 8px 24px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
+    .metric-item { display: flex; align-items: baseline; gap: 6px; padding: 0 16px; }
+    .metric-item:first-child { padding-left: 0; }
+    .metric-val { font-size: 15px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .metric-label { font-size: 10px; color: var(--muted); font-family: monospace; }
+    .metric-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+
+    /* ── Body: queue + main ── */
+    .body-wrap { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Queue panel ── */
+    .queue-panel {
+      width: var(--queue-w); flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      background: var(--surface);
+    }
+    .queue-header {
+      padding: 14px 16px 10px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--muted);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .queue-count {
+      font-size: 10px; background: rgba(59,130,246,0.15);
+      color: var(--accent); padding: 1px 6px; border-radius: 10px;
+      font-weight: 600;
+    }
+    .queue-list { overflow-y: auto; flex: 1; }
+    .queue-item {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.15s;
+      border-left: 3px solid transparent;
+      position: relative;
+    }
+    .queue-item:hover { background: var(--surface2); }
+    .queue-item.selected { background: var(--surface2); border-left-color: var(--accent); }
+    .queue-item.pending-item { opacity: 0.6; cursor: default; }
+    .queue-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .queue-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .queue-time { font-size: 10px; color: var(--muted); font-family: monospace; }
+    .queue-bottom { display: flex; align-items: center; justify-content: space-between; }
+    .queue-field { font-size: 10px; color: var(--muted); font-family: monospace; }
+    .queue-err { font-size: 10px; font-weight: 600; color: var(--muted); font-family: monospace; }
+
+    .status-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px; text-transform: uppercase;
+      letter-spacing: 0.4px; margin-bottom: 3px;
+    }
+    .badge-auto { background: rgba(16,185,129,0.15); color: var(--green); }
+    .badge-review { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .badge-pending { background: rgba(100,116,139,0.1); color: var(--muted); }
+    .badge-escalated { background: rgba(139,92,246,0.15); color: #a78bfa; }
+
+    /* ── Right: pipeline + panels ── */
+    .main-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
     /* ── Pipeline ── */
-    .pipeline { display: flex; align-items: center; gap: 0; }
+    .pipeline-section { padding: 18px 24px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .section-label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 16px;
+    }
+    .pipeline { display: flex; align-items: center; }
     .node-wrap { display: flex; align-items: center; flex-shrink: 0; }
     .node {
       width: var(--node-w); background: var(--surface2);
-      border: 1.5px solid var(--border); border-radius: 12px;
-      padding: 14px; cursor: pointer; position: relative; overflow: hidden;
+      border: 1.5px solid var(--border); border-radius: 11px;
+      padding: 12px; cursor: pointer; position: relative; overflow: hidden;
       transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
     }
     .node::before {
       content: ''; position: absolute; inset: 0; opacity: 0;
-      transition: opacity 0.4s; border-radius: 12px;
+      transition: opacity 0.4s; border-radius: 11px;
     }
-    .node.running { border-color: var(--accent); box-shadow: 0 0 20px rgba(59,130,246,0.25); }
+    .node.running { border-color: var(--accent); box-shadow: 0 0 18px rgba(59,130,246,0.25); }
     .node.running::before { background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.08), transparent 70%); opacity: 1; }
     .node.done { border-color: var(--green); }
     .node.done::before { background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.05), transparent 70%); opacity: 1; }
-    .node.active-detail { box-shadow: 0 0 0 2px var(--accent2), 0 6px 24px rgba(139,92,246,0.2); }
+    .node.active-detail { box-shadow: 0 0 0 2px var(--accent2), 0 4px 20px rgba(139,92,246,0.2); }
     .node:hover { transform: translateY(-2px); }
     .node-dot {
-      position: absolute; top: 10px; right: 10px;
-      width: 7px; height: 7px; border-radius: 50%; background: var(--border);
-      transition: background 0.3s;
+      position: absolute; top: 9px; right: 9px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border); transition: background 0.3s;
     }
     .node.running .node-dot { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
     .node.done .node-dot { background: var(--green); }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
-    .node-icon { font-size: 20px; margin-bottom: 8px; display: block; }
-    .node-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
-    .node-role { font-size: 10px; color: var(--accent2); font-weight: 600; margin-bottom: 4px; font-style: italic; }
-    .node-desc { font-size: 10px; color: var(--muted); line-height: 1.4; }
-    .node-time { font-size: 10px; color: var(--muted); margin-top: 7px; min-height: 13px; font-variant-numeric: tabular-nums; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.6)} }
+    .node-icon { font-size: 18px; margin-bottom: 7px; display: block; }
+    .node-name { font-size: 11px; font-weight: 700; margin-bottom: 1px; }
+    .node-role { font-size: 9px; color: var(--accent2); font-weight: 600; margin-bottom: 3px; font-style: italic; }
+    .node-desc { font-size: 9px; color: var(--muted); line-height: 1.4; }
+    .node-time { font-size: 9px; color: var(--muted); margin-top: 6px; min-height: 12px; font-variant-numeric: tabular-nums; }
 
-    /* ── Connector ── */
-    .connector { display: flex; align-items: center; width: 48px; flex-shrink: 0; }
+    .connector { display: flex; align-items: center; width: 40px; flex-shrink: 0; }
     .connector-line {
       height: 2px; flex: 1; background: var(--border);
       border-radius: 2px; overflow: hidden; position: relative;
@@ -115,155 +173,144 @@
     @keyframes flow { from{left:-100%} to{left:100%} }
     .connector-arrow {
       width: 0; height: 0;
-      border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-      border-left: 6px solid var(--border); transition: border-left-color 0.3s;
+      border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+      border-left: 5px solid var(--border);
     }
-
-    .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 14px; overflow: hidden; }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 2px; transition: width 0.4s ease;
-    }
+    .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.4s ease; }
 
     /* ── Bottom panels ── */
-    .panels {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
-      overflow: hidden; height: 100%;
-    }
-    .panel { padding: 20px 24px; border-right: 1px solid var(--border); overflow-y: auto; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr 1fr; flex: 1; overflow: hidden; }
+    .panel { padding: 16px 20px; border-right: 1px solid var(--border); overflow-y: auto; }
     .panel:last-child { border-right: none; }
     .panel-title {
       font-size: 10px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 14px;
-      display: flex; align-items: center; gap: 7px;
+      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
     }
     .panel-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 
-    /* ── Node detail ── */
-    .placeholder { color: var(--muted); font-size: 12px; text-align: center; margin-top: 32px; line-height: 1.6; }
-    .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-    .detail-icon { font-size: 26px; }
-    .detail-name { font-size: 15px; font-weight: 700; }
-    .detail-role { font-size: 10px; color: var(--accent2); font-weight: 600; margin-top: 2px; font-style: italic; }
-    .detail-badge {
-      display: inline-block; font-size: 10px; font-weight: 600;
-      padding: 2px 7px; border-radius: 4px; margin-top: 4px;
-      background: rgba(16,185,129,0.15); color: var(--green);
-    }
+    /* ── Detail panel ── */
+    .placeholder { color: var(--muted); font-size: 11px; text-align: center; margin-top: 28px; line-height: 1.6; }
+    .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .detail-icon { font-size: 24px; }
+    .detail-name { font-size: 14px; font-weight: 700; }
+    .detail-role { font-size: 9px; color: var(--accent2); font-weight: 600; margin-top: 2px; font-style: italic; }
+    .detail-badge { display: inline-block; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 3px; margin-top: 3px; background: rgba(16,185,129,0.15); color: var(--green); }
 
-    .section-block { margin-bottom: 14px; }
-    .block-label {
-      font-size: 9px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;
-    }
+    .block-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 5px; }
+    .section-block { margin-bottom: 12px; }
     .kv-table { width: 100%; border-collapse: collapse; }
-    .kv-table td { padding: 5px 7px; font-size: 11px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .kv-table td:first-child { color: var(--muted); width: 42%; font-weight: 500; white-space: nowrap; }
-    .kv-table td:last-child { color: var(--text); font-family: 'SF Mono','Fira Code',monospace; font-size: 10.5px; word-break: break-all; }
+    .kv-table td { padding: 4px 6px; font-size: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .kv-table td:first-child { color: var(--muted); width: 40%; font-weight: 500; white-space: nowrap; }
+    .kv-table td:last-child { color: var(--text); font-family: 'SF Mono','Fira Code',monospace; font-size: 9.5px; word-break: break-all; }
 
-    .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
-    .tag {
-      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
-      font-family: monospace; background: rgba(59,130,246,0.12); color: #93c5fd;
-    }
-
-    .val-green { background: rgba(16,185,129,0.12); color: var(--green); padding: 1px 5px; border-radius: 3px; }
-    .val-yellow { background: rgba(245,158,11,0.12); color: var(--yellow); padding: 1px 5px; border-radius: 3px; }
-    .val-red { background: rgba(239,68,68,0.12); color: var(--red); padding: 1px 5px; border-radius: 3px; }
-
-    .confidence-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 5px; }
-    .confidence-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .val-green { background: rgba(16,185,129,0.12); color: var(--green); padding: 1px 4px; border-radius: 3px; }
+    .val-yellow { background: rgba(245,158,11,0.12); color: var(--yellow); padding: 1px 4px; border-radius: 3px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; font-family: monospace; background: rgba(59,130,246,0.12); color: #93c5fd; }
+    .check-row { display: flex; align-items: flex-start; gap: 6px; padding: 3px 0; font-size: 10px; }
+    .check-pass { color: var(--green); flex-shrink: 0; }
+    .check-fail { color: var(--red); flex-shrink: 0; }
+    .check-skip { color: var(--muted); flex-shrink: 0; }
+    .reasoning-box { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; font-size: 10px; font-family: 'SF Mono','Fira Code',monospace; color: #94a3b8; line-height: 1.6; }
+    .confidence-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+    .confidence-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
     .confidence-fill.high { background: var(--green); }
     .confidence-fill.low { background: var(--yellow); }
-
-    .reasoning-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 6px; padding: 10px 12px;
-      font-size: 10.5px; font-family: 'SF Mono','Fira Code',monospace;
-      color: #94a3b8; line-height: 1.6;
-    }
-
-    .check-row { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; font-size: 10.5px; line-height: 1.4; }
-    .check-icon { flex-shrink: 0; margin-top: 1px; }
-    .check-pass { color: var(--green); }
-    .check-fail { color: var(--red); }
+    .kb-box { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; font-size: 9.5px; font-family: 'SF Mono','Fira Code',monospace; color: #94a3b8; line-height: 1.6; white-space: pre-wrap; margin-top: 5px; }
 
     /* ── Result panel ── */
     .action-card {
       background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 10px; padding: 16px; margin-bottom: 14px;
-      font-family: 'SF Mono','Fira Code',monospace;
-      font-size: 11px; line-height: 1.75; white-space: pre-wrap;
-      transition: border-color 0.3s;
+      border-radius: 9px; padding: 14px; margin-bottom: 12px;
+      font-family: 'SF Mono','Fira Code',monospace; font-size: 10.5px;
+      line-height: 1.75; white-space: pre-wrap;
     }
     .action-card.success { border-color: var(--green); background: rgba(16,185,129,0.04); }
     .action-card.review { border-color: var(--yellow); background: rgba(245,158,11,0.04); }
+    .stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stat { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 9px; text-align: center; }
+    .stat-val { font-size: 16px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 9px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .stat-row { display: flex; gap: 10px; margin-bottom: 14px; }
-    .stat {
-      flex: 1; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px; text-align: center;
+    /* ── Human Review Card ── */
+    .hr-card {
+      background: var(--surface2); border: 1.5px solid var(--yellow);
+      background: rgba(245,158,11,0.04);
+      border-radius: 9px; padding: 14px; margin-bottom: 12px;
     }
-    .stat-val { font-size: 18px; font-weight: 700; color: var(--accent); }
-    .stat-label { font-size: 9px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hr-card-header {
+      font-size: 13px; font-weight: 700; color: var(--yellow);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .hr-reason {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 5px; padding: 10px;
+      font-family: 'SF Mono','Fira Code',monospace; font-size: 10px;
+      color: #94a3b8; line-height: 1.6; white-space: pre-wrap;
+      margin: 10px 0;
+    }
+    .hr-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+    .hr-btn {
+      flex: 1; min-width: 80px; padding: 8px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer; border: none;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .hr-btn:hover { opacity: 0.85; }
+    .hr-btn:active { transform: scale(0.97); }
+    .hr-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-confirm { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .btn-override { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.25); }
+    .btn-escalate { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+    .override-row { display: flex; gap: 6px; margin-top: 8px; }
+    .override-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 5px; padding: 6px 9px; color: var(--text);
+      font-family: 'SF Mono','Fira Code',monospace; font-size: 11px;
+    }
+    .override-input:focus { outline: none; border-color: var(--accent); }
+    .override-submit {
+      padding: 6px 12px; background: var(--accent); color: #fff;
+      border: none; border-radius: 5px; font-size: 11px; font-weight: 600;
+      cursor: pointer;
+    }
+    .resolve-msg {
+      padding: 12px 14px; border-radius: 9px; font-size: 12px;
+      font-weight: 600; line-height: 1.5;
+    }
+    .resolve-msg.confirmed { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: var(--green); }
+    .resolve-msg.escalated { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25); color: #a78bfa; }
 
-    /* ── Trace / compliance panel ── */
-    .trace-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
-    .tab-btn {
-      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
-      padding: 6px 12px; background: none; border: none; color: var(--muted);
-      cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s;
-    }
+    /* ── Trace panel ── */
+    .trace-tabs { display: flex; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .tab-btn { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 10px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
     .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-
-    .trace-entry {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; padding: 10px 12px; margin-bottom: 8px;
-      font-size: 10.5px; font-family: 'SF Mono','Fira Code',monospace; line-height: 1.65;
-    }
-    .trace-badge {
-      display: inline-block; font-size: 9px; font-weight: 700;
-      padding: 2px 6px; border-radius: 3px; margin-bottom: 7px;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
+    .trace-entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 11px; margin-bottom: 7px; font-size: 10px; font-family: 'SF Mono','Fira Code',monospace; line-height: 1.6; }
+    .trace-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 3px; margin-bottom: 6px; text-transform: uppercase; }
     .badge-parser { background: rgba(139,92,246,0.2); color: #a78bfa; }
     .badge-healer { background: rgba(59,130,246,0.2); color: #60a5fa; }
     .badge-critic { background: rgba(245,158,11,0.2); color: #fbbf24; }
     .badge-messenger { background: rgba(16,185,129,0.2); color: #34d399; }
     .trace-kv { color: var(--muted); }
     .trace-kv span { color: var(--text); }
-
-    .compliance-block {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; padding: 12px 14px; margin-bottom: 8px; font-size: 11px;
-    }
-    .compliance-title {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px;
-    }
-    .latency-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 10.5px; border-bottom: 1px solid var(--border); }
+    .compliance-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 7px; font-size: 10px; }
+    .compliance-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 7px; }
+    .latency-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10px; border-bottom: 1px solid var(--border); }
     .latency-row:last-child { border-bottom: none; }
     .latency-node { color: var(--muted); }
     .latency-val { font-family: monospace; color: var(--text); }
-
-    .kb-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 6px; padding: 10px 12px; font-size: 10px;
-      font-family: 'SF Mono','Fira Code',monospace; color: #94a3b8;
-      line-height: 1.6; white-space: pre-wrap; margin-top: 6px;
-    }
-
-    .reasoning-path-entry { padding: 5px 0; font-size: 10.5px; border-bottom: 1px solid var(--border); line-height: 1.5; }
-    .reasoning-path-entry:last-child { border-bottom: none; }
+    .rp-entry { padding: 5px 0; font-size: 10px; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .rp-entry:last-child { border-bottom: none; }
     .rp-node { font-weight: 700; color: var(--accent2); }
 
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   </style>
 </head>
 <body>
 
+<!-- Header -->
 <header>
   <div class="logo">
     <div class="logo-icon">🛡️</div>
@@ -273,113 +320,138 @@
     </div>
   </div>
   <div class="header-right">
-    <span class="version-badge">v0.3 · RAG + Compliance Guard</span>
-    <button class="run-btn" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+    <span class="version-badge">v0.4 · Queue + Human Review</span>
+    <button class="run-btn" id="runBtn" onclick="runDefaultPipeline()">▶ Run Default</button>
   </div>
 </header>
 
-<div class="layout">
-  <div class="pipeline-section">
-    <div class="section-label">Agent Pipeline</div>
-    <div class="pipeline">
+<!-- Metric bar -->
+<div class="metric-bar" id="metricBar">
+  <div class="metric-item"><span class="metric-val" id="mTotal">—</span><span class="metric-label">processed today</span></div>
+  <div class="metric-sep"></div>
+  <div class="metric-item"><span class="metric-val" id="mFixed">—</span><span class="metric-label">AUTO_FIXED</span></div>
+  <div class="metric-sep"></div>
+  <div class="metric-item"><span class="metric-val" id="mReview">—</span><span class="metric-label">Human Review</span></div>
+  <div class="metric-sep"></div>
+  <div class="metric-item"><span class="metric-val">1.0s</span><span class="metric-label">avg resolution</span></div>
+</div>
 
-      <div class="node-wrap">
-        <div class="node idle" id="node-parser" onclick="selectNode('parser')">
-          <div class="node-dot"></div>
-          <span class="node-icon">🔍</span>
-          <div class="node-name">Parser</div>
-          <div class="node-role">RAG Extractor</div>
-          <div class="node-desc">Candidate scoring, KB lookup, error extraction</div>
-          <div class="node-time" id="time-parser"></div>
-        </div>
-      </div>
-      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-1"></div><div class="connector-arrow"></div></div></div>
+<!-- Body -->
+<div class="body-wrap">
 
-      <div class="node-wrap">
-        <div class="node idle" id="node-healer" onclick="selectNode('healer')">
-          <div class="node-dot"></div>
-          <span class="node-icon">🩺</span>
-          <div class="node-name">Healer</div>
-          <div class="node-role">DB Lookup</div>
-          <div class="node-desc">Search depth audit, mismatch detection</div>
-          <div class="node-time" id="time-healer"></div>
-        </div>
-      </div>
-      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-2"></div><div class="connector-arrow"></div></div></div>
-
-      <div class="node-wrap">
-        <div class="node idle" id="node-critic" onclick="selectNode('critic')">
-          <div class="node-dot"></div>
-          <span class="node-icon">⚖️</span>
-          <div class="node-name">Critic</div>
-          <div class="node-role">Compliance Guard</div>
-          <div class="node-desc">3-check jailbreak & schema validation</div>
-          <div class="node-time" id="time-critic"></div>
-        </div>
-      </div>
-      <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-3"></div><div class="connector-arrow"></div></div></div>
-
-      <div class="node-wrap">
-        <div class="node idle" id="node-messenger" onclick="selectNode('messenger')">
-          <div class="node-dot"></div>
-          <span class="node-icon">📨</span>
-          <div class="node-name">Messenger</div>
-          <div class="node-role">Action Card</div>
-          <div class="node-desc">Product-led output with reason + confidence</div>
-          <div class="node-time" id="time-messenger"></div>
-        </div>
-      </div>
-
+  <!-- Queue panel -->
+  <div class="queue-panel">
+    <div class="queue-header">
+      Rejection Queue
+      <span class="queue-count" id="queueCount">0</span>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="queue-list" id="queueList">
+      <div class="placeholder" style="margin-top:24px">Loading queue…</div>
+    </div>
   </div>
 
-  <div class="panels">
-    <!-- Panel 1: Node Detail -->
-    <div class="panel">
-      <div class="panel-title"><span class="panel-dot"></span>Node Detail</div>
-      <div id="nodeDetail"><div class="placeholder">Click a node or run the pipeline<br/>to inspect its inputs, outputs & reasoning.</div></div>
-    </div>
+  <!-- Main right -->
+  <div class="main-right">
 
-    <!-- Panel 2: Result -->
-    <div class="panel">
-      <div class="panel-title"><span class="panel-dot" style="background:var(--green)"></span>Result</div>
-      <div id="resultPanel"><div class="placeholder">Run the pipeline to see the action card.</div></div>
-    </div>
+    <!-- Pipeline -->
+    <div class="pipeline-section">
+      <div class="section-label">Agent Pipeline</div>
+      <div class="pipeline">
 
-    <!-- Panel 3: Trace + Compliance -->
-    <div class="panel">
-      <div class="panel-title"><span class="panel-dot" style="background:var(--accent2)"></span>Trace & Compliance</div>
-      <div class="trace-tabs">
-        <button class="tab-btn active" onclick="switchTab('trace', this)">Agent Trace</button>
-        <button class="tab-btn" onclick="switchTab('compliance', this)">Compliance</button>
-        <button class="tab-btn" onclick="switchTab('reasoning', this)">Reasoning Path</button>
+        <div class="node-wrap">
+          <div class="node idle" id="node-parser" onclick="selectNode('parser')">
+            <div class="node-dot"></div>
+            <span class="node-icon">🔍</span>
+            <div class="node-name">Parser</div>
+            <div class="node-role">RAG Extractor</div>
+            <div class="node-desc">Candidate scoring + KB lookup</div>
+            <div class="node-time" id="time-parser"></div>
+          </div>
+        </div>
+        <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-1"></div><div class="connector-arrow"></div></div></div>
+
+        <div class="node-wrap">
+          <div class="node idle" id="node-healer" onclick="selectNode('healer')">
+            <div class="node-dot"></div>
+            <span class="node-icon">🩺</span>
+            <div class="node-name">Healer</div>
+            <div class="node-role">DB Lookup</div>
+            <div class="node-desc">Search depth + mismatch audit</div>
+            <div class="node-time" id="time-healer"></div>
+          </div>
+        </div>
+        <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-2"></div><div class="connector-arrow"></div></div></div>
+
+        <div class="node-wrap">
+          <div class="node idle" id="node-critic" onclick="selectNode('critic')">
+            <div class="node-dot"></div>
+            <span class="node-icon">⚖️</span>
+            <div class="node-name">Critic</div>
+            <div class="node-role">Compliance Guard</div>
+            <div class="node-desc">3-check jailbreak validation</div>
+            <div class="node-time" id="time-critic"></div>
+          </div>
+        </div>
+        <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-3"></div><div class="connector-arrow"></div></div></div>
+
+        <div class="node-wrap">
+          <div class="node idle" id="node-messenger" onclick="selectNode('messenger')">
+            <div class="node-dot"></div>
+            <span class="node-icon">📨</span>
+            <div class="node-name">Messenger</div>
+            <div class="node-role">Action Card</div>
+            <div class="node-desc">Product-led output + routing</div>
+            <div class="node-time" id="time-messenger"></div>
+          </div>
+        </div>
+
       </div>
-      <div id="tab-trace"><div class="placeholder" style="margin-top:16px">No trace yet.</div></div>
-      <div id="tab-compliance" style="display:none"><div class="placeholder" style="margin-top:16px">Run the pipeline to see the compliance report.</div></div>
-      <div id="tab-reasoning" style="display:none"><div class="placeholder" style="margin-top:16px">No reasoning path yet.</div></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
+
+    <!-- Bottom panels -->
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-title"><span class="panel-dot"></span>Node Detail</div>
+        <div id="nodeDetail"><div class="placeholder">Click a node or select a queue item<br/>to inspect inputs, outputs & reasoning.</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="panel-dot" style="background:var(--green)"></span>Result</div>
+        <div id="resultPanel"><div class="placeholder">Select a queue item to run the pipeline.</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="panel-dot" style="background:var(--accent2)"></span>Trace & Compliance</div>
+        <div class="trace-tabs">
+          <button class="tab-btn active" onclick="switchTab('trace',this)">Trace</button>
+          <button class="tab-btn" onclick="switchTab('compliance',this)">Compliance</button>
+          <button class="tab-btn" onclick="switchTab('reasoning',this)">Reasoning</button>
+        </div>
+        <div id="tab-trace"><div class="placeholder" style="margin-top:12px">No trace yet.</div></div>
+        <div id="tab-compliance" style="display:none"><div class="placeholder" style="margin-top:12px">Run the pipeline first.</div></div>
+        <div id="tab-reasoning" style="display:none"><div class="placeholder" style="margin-top:12px">No reasoning path yet.</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
   const NODE_ORDER = ['parser','healer','critic','messenger'];
   const NODE_META = {
-    parser:    { icon:'🔍', label:'Parser',    role:'RAG Extractor' },
-    healer:    { icon:'🩺', label:'Healer',    role:'DB Lookup' },
-    critic:    { icon:'⚖️', label:'Critic',    role:'Compliance Guard' },
-    messenger: { icon:'📨', label:'Messenger', role:'Action Card' },
-  };
-  const BADGE = {
-    parser: 'badge-parser', healer: 'badge-healer',
-    critic: 'badge-critic', messenger: 'badge-messenger',
+    parser:    {icon:'🔍', label:'Parser',    role:'RAG Extractor'},
+    healer:    {icon:'🩺', label:'Healer',    role:'DB Lookup'},
+    critic:    {icon:'⚖️', label:'Critic',    role:'Compliance Guard'},
+    messenger: {icon:'📨', label:'Messenger', role:'Action Card'},
   };
 
   let pipelineData = null;
   let selectedNode = null;
+  let currentRejectionId = null;
+  let queueItems = [];
 
-  function setNodeState(name, s) {
-    const el = document.getElementById('node-' + name);
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function setNodeState(n, s) {
+    const el = document.getElementById('node-' + n);
     el.classList.remove('idle','running','done');
     el.classList.add(s);
   }
@@ -388,14 +460,107 @@
     el.classList.remove('flowing'); void el.offsetWidth; el.classList.add('flowing');
   }
   function setProgress(p) { document.getElementById('progressFill').style.width = p + '%'; }
-  function setTime(name, ms) { document.getElementById('time-' + name).textContent = ms + 'ms'; }
-
+  function setTime(n, ms) { document.getElementById('time-' + n).textContent = ms + 'ms'; }
   function switchTab(tab, btn) {
-    ['trace','compliance','reasoning'].forEach(t => {
-      document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
-    });
+    ['trace','compliance','reasoning'].forEach(t =>
+      document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+  }
+
+  function relativeTime(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  function statusBadgeHtml(status) {
+    const map = {
+      'AUTO_FIXED': ['badge-auto', 'AUTO_FIXED'],
+      'HUMAN_REVIEW': ['badge-review', 'REVIEW'],
+      'PENDING': ['badge-pending', 'PENDING'],
+      'ESCALATED': ['badge-escalated', 'ESCALATED'],
+    };
+    const [cls, label] = map[status] || ['badge-pending', status];
+    return `<span class="status-badge ${cls}" id="badge-${currentRejectionId || ''}">${label}</span>`;
+  }
+
+  // ── Queue ──────────────────────────────────────────────────────────────────
+  async function loadQueue() {
+    try {
+      const res = await fetch('/api/queue');
+      queueItems = await res.json();
+      renderQueue(queueItems);
+      renderMetricBar(queueItems);
+    } catch(e) {
+      document.getElementById('queueList').innerHTML =
+        '<div class="placeholder" style="color:var(--red)">Failed to load queue.</div>';
+    }
+  }
+
+  function renderQueue(items) {
+    document.getElementById('queueCount').textContent = items.length;
+    let h = '';
+    items.forEach((item, idx) => {
+      const isPending = !item.scenario_file;
+      const badgeMap = {
+        'AUTO_FIXED': ['badge-auto','AUTO_FIXED'],
+        'HUMAN_REVIEW': ['badge-review','REVIEW'],
+        'PENDING': ['badge-pending','PENDING'],
+      };
+      const [bc, bl] = badgeMap[item.status] || ['badge-pending', item.status];
+      h += `<div class="queue-item${isPending ? ' pending-item' : ''}" id="qitem-${item.id}"
+               onclick="queueItemClick(${idx})" data-idx="${idx}">
+        <div><span class="status-badge ${bc}" id="qs-badge-${item.id}">${bl}</span></div>
+        <div class="queue-item-top">
+          <span class="queue-name">${item.employee_name}</span>
+          <span class="queue-time">${relativeTime(item.timestamp)}</span>
+        </div>
+        <div class="queue-bottom">
+          <span class="queue-field">${item.field}</span>
+          <span class="queue-err">E-${item.error_code}</span>
+        </div>
+      </div>`;
+    });
+    document.getElementById('queueList').innerHTML = h;
+  }
+
+  function renderMetricBar(items) {
+    const processed = items.filter(i => i.status === 'AUTO_FIXED' || i.status === 'HUMAN_REVIEW');
+    const fixed = items.filter(i => i.status === 'AUTO_FIXED');
+    const review = items.filter(i => i.status === 'HUMAN_REVIEW');
+    const pct = processed.length ? Math.round((fixed.length / processed.length) * 100) : 0;
+    document.getElementById('mTotal').textContent = processed.length + ' processed';
+    document.getElementById('mFixed').textContent = fixed.length + ' fixed (' + pct + '%)';
+    document.getElementById('mReview').textContent = review.length + ' review';
+  }
+
+  function queueItemClick(idx) {
+    const item = queueItems[idx];
+    // Highlight row
+    document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('selected'));
+    document.getElementById('qitem-' + item.id).classList.add('selected');
+    currentRejectionId = item.id;
+
+    if (!item.scenario_file) {
+      // PENDING — no pipeline run
+      resetPipelineUI();
+      document.getElementById('resultPanel').innerHTML =
+        '<div class="placeholder" style="margin-top:32px;color:var(--muted)">' +
+        'Pipeline run not available for this scenario yet.</div>';
+      return;
+    }
+
+    runPipelineFor(item.scenario_file, item.id);
+  }
+
+  // ── Pipeline ───────────────────────────────────────────────────────────────
+  function resetPipelineUI() {
+    NODE_ORDER.forEach(n => { setNodeState(n, 'idle'); document.getElementById('time-' + n).textContent = ''; });
+    ['conn-1','conn-2','conn-3'].forEach(id => document.getElementById(id).classList.remove('flowing'));
+    setProgress(0);
+    pipelineData = null;
   }
 
   function selectNode(name) {
@@ -405,137 +570,76 @@
     renderNodeDetail(name);
   }
 
-  function renderNodeDetail(name) {
-    if (!pipelineData) {
-      document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Run the pipeline first.</div>';
-      return;
-    }
-    const step = pipelineData.steps.find(s => s.node === name);
-    if (!step) return;
-    const meta = NODE_META[name];
-
-    let h = `
-      <div class="detail-header">
-        <div class="detail-icon">${meta.icon}</div>
-        <div>
-          <div class="detail-name">${meta.label}</div>
-          <div class="detail-role">${meta.role}</div>
-          <span class="detail-badge">Completed in ${step.duration_ms}ms</span>
-        </div>
-      </div>`;
-
-    // Inputs
-    h += `<div class="section-block"><div class="block-label">Inputs</div><table class="kv-table">`;
-    for (const [k, v] of Object.entries(step.inputs)) {
-      const disp = typeof v === 'string' && v.length > 70 ? v.slice(0,70)+'…' : JSON.stringify(v) ?? '—';
-      h += `<tr><td>${k}</td><td>${disp}</td></tr>`;
-    }
-    h += `</table></div>`;
-
-    // Outputs — special rendering per node
-    h += `<div class="section-block"><div class="block-label">Outputs</div>`;
-    if (name === 'parser') {
-      h += renderParserOutputs(step.outputs);
-    } else if (name === 'healer') {
-      h += renderHealerOutputs(step.outputs);
-    } else if (name === 'critic') {
-      h += renderCriticOutputs(step.outputs);
-    } else {
-      h += `<table class="kv-table">`;
-      for (const [k, v] of Object.entries(step.outputs)) {
-        const disp = k === 'status'
-          ? (v === 'AUTO_FIXED' ? `<span class="val-green">${v}</span>` : `<span class="val-yellow">${v}</span>`)
-          : (JSON.stringify(v) ?? '—');
-        h += `<tr><td>${k}</td><td>${disp}</td></tr>`;
-      }
-      h += `</table>`;
-    }
-    h += `</div>`;
-
-    // Reasoning
-    if (step.reasoning) {
-      h += `<div class="section-block"><div class="block-label">Internal Reasoning</div>
-        <div class="reasoning-box">${step.reasoning.replace(/\[.*?\]\s*/, '')}</div></div>`;
-    }
-
-    document.getElementById('nodeDetail').innerHTML = h;
+  async function runDefaultPipeline() {
+    currentRejectionId = null;
+    await runPipelineFor(null, null);
   }
 
-  function renderParserOutputs(o) {
-    let h = `<table class="kv-table">
-      <tr><td>employee_id</td><td><span class="val-green">${o.employee_id}</span></td></tr>
-      <tr><td>error_code</td><td>${o.error_code}</td></tr>
-      <tr><td>field_affected</td><td>${o.field_affected}</td></tr>
-      <tr><td>submitted_value</td><td><span class="val-yellow">${o.submitted_value}</span></td></tr>
-      <tr><td>kb_evidence</td><td>${o.kb_evidence_chars} chars retrieved</td></tr>
-    </table>`;
-    if (o.top_candidates) {
-      h += `<div style="margin-top:10px"><div class="block-label">RAG Candidates</div>
-        <div style="margin-bottom:5px;font-size:10px;color:var(--muted)">Employee IDs found:</div>
-        <div class="tag-list">${o.top_candidates.employee_ids.map(id => `<span class="tag">${id}</span>`).join('')}</div>
-        <div style="margin:6px 0 5px;font-size:10px;color:var(--muted)">Error codes found:</div>
-        <div class="tag-list">${o.top_candidates.error_codes.map(c => `<span class="tag">${c}</span>`).join('')}</div>
-      </div>`;
-    }
-    if (o.error_description) {
-      h += `<div style="margin-top:10px"><div class="block-label">KB Evidence</div>
-        <div class="kb-box">${o.error_description}</div></div>`;
-    }
-    return h;
-  }
+  async function runPipelineFor(scenarioFile, rejId) {
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Running…';
+    resetPipelineUI();
+    document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Pipeline running…</div>';
+    document.getElementById('resultPanel').innerHTML = '<div class="placeholder">Running…</div>';
+    document.getElementById('tab-trace').innerHTML = '<div class="placeholder" style="margin-top:12px">Collecting…</div>';
 
-  function renderHealerOutputs(o) {
-    let h = `<table class="kv-table">
-      <tr><td>corrected_value</td><td><span class="val-green">${o.corrected_value}</span></td></tr>
-      <tr><td>match_index</td><td>Record[${o.match_index}]</td></tr>
-      <tr><td>source</td><td>${o.source}</td></tr>
-    </table>`;
-    if (o.mismatch_log) {
-      h += `<div style="margin-top:10px"><div class="block-label">Mismatch Log</div>
-        <div class="reasoning-box">${o.mismatch_log}</div></div>`;
-    }
-    if (o.search_depth && o.search_depth.length) {
-      h += `<div style="margin-top:10px"><div class="block-label">Search Depth (${o.search_depth.length} records)</div>`;
-      o.search_depth.forEach(row => {
-        const isMatch = row.includes('MATCH');
-        h += `<div class="check-row"><span class="check-icon ${isMatch ? 'check-pass' : ''}">${isMatch ? '✓' : '○'}</span>
-          <span style="color:${isMatch ? 'var(--green)' : 'var(--muted)'}">${row}</span></div>`;
+    const DELAYS = [0, 600, 1200, 1700];
+    NODE_ORDER.forEach((n, i) => {
+      setTimeout(() => {
+        setNodeState(n, 'running');
+        setProgress((i + 1) * 18);
+        if (i > 0) flowConnector(i);
+      }, DELAYS[i]);
+    });
+
+    try {
+      const body = scenarioFile ? { scenario_file: scenarioFile } : {};
+      const res = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
-      h += `</div>`;
-    }
-    return h;
-  }
+      const data = await res.json();
+      pipelineData = data;
 
-  function renderCriticOutputs(o) {
-    const pct = Math.round((o.confidence_score || 0) * 100);
-    const cls = o.valid ? 'high' : 'low';
-    let h = `<table class="kv-table">
-      <tr><td>pattern_tested</td><td style="font-family:monospace">${o.pattern_tested}</td></tr>
-      <tr><td>checks_passed</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
-      <tr><td>confidence</td><td>${pct}%<div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div></td></tr>
-      <tr><td>valid</td><td>${o.valid ? '<span class="val-green">✓ PASS</span>' : '<span class="val-yellow">⚠ FAIL</span>'}</td></tr>
-    </table>`;
-    if (o.validation_log && o.validation_log.length) {
-      h += `<div style="margin-top:10px"><div class="block-label">Validation Log</div>`;
-      o.validation_log.forEach(entry => {
-        const pass = entry.includes('→ PASS');
-        h += `<div class="check-row">
-          <span class="check-icon ${pass ? 'check-pass' : 'check-fail'}">${pass ? '✓' : '✗'}</span>
-          <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+      NODE_ORDER.forEach((n, i) => {
+        setTimeout(() => {
+          setNodeState(n, 'done');
+          const step = data.steps.find(s => s.node === n);
+          if (step) setTime(n, step.duration_ms);
+          if (i === NODE_ORDER.length - 1) {
+            flowConnector(3);
+            setProgress(100);
+            if (data.status === 'HUMAN_REVIEW') {
+              renderHumanReviewCard(data, rejId);
+            } else {
+              renderAutoFixedCard(data);
+            }
+            renderTrace(data.steps);
+            renderCompliance(data.compliance_report);
+            renderReasoningPath(data.reasoning_path);
+            if (selectedNode) renderNodeDetail(selectedNode);
+            btn.disabled = false;
+            btn.innerHTML = '▶ Run Default';
+          }
+        }, DELAYS[i] + 150);
       });
-      h += `</div>`;
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '▶ Run Default';
+      NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
+      document.getElementById('resultPanel').innerHTML =
+        `<div class="placeholder" style="color:var(--red)">Error: ${err.message}</div>`;
     }
-    if (o.summary) {
-      h += `<div style="margin-top:8px" class="reasoning-box">${o.summary}</div>`;
-    }
-    return h;
   }
 
-  function renderResult(data) {
-    const ok = data.status === 'AUTO_FIXED';
+  // ── Result rendering ───────────────────────────────────────────────────────
+  function renderAutoFixedCard(data) {
     const cr = data.compliance_report || {};
     let h = `
-      <div class="action-card ${ok ? 'success' : 'review'}">${data.action_card}</div>
+      <div class="action-card success">${data.action_card}</div>
       <div class="stat-row">
         <div class="stat"><div class="stat-val">${Math.round(data.confidence_score*100)}%</div><div class="stat-label">Confidence</div></div>
         <div class="stat"><div class="stat-val">${cr.total_ms || data.total_ms}ms</div><div class="stat-label">Total</div></div>
@@ -547,26 +651,244 @@
           <tr><td>Error code</td><td>${data.error_code}</td></tr>
           <tr><td>Submitted</td><td><span class="val-yellow">${data.submitted_value}</span></td></tr>
           <tr><td>Corrected</td><td><span class="val-green">${data.corrected_value}</span></td></tr>
-          <tr><td>Status</td><td>${ok ? '<span class="val-green">AUTO_FIXED</span>' : '<span class="val-yellow">HUMAN_REVIEW</span>'}</td></tr>
         </table>
       </div>`;
     document.getElementById('resultPanel').innerHTML = h;
   }
 
+  function renderHumanReviewCard(data, rejId) {
+    const hasCorrection = data.corrected_value && data.corrected_value !== data.submitted_value;
+    const confirmBtn = hasCorrection
+      ? `<button class="hr-btn btn-confirm" id="btnConfirm" onclick="resolveAction('confirm')">✓ Confirm Fix</button>`
+      : '';
+
+    let h = `<div class="hr-card" id="hrCard">
+      <div class="hr-card-header">⚠️ Human Review Required</div>
+      <table class="kv-table">
+        <tr><td>Field</td><td>${data.field_affected || '—'}</td></tr>
+        <tr><td>Employee</td><td>${data.employee_id}</td></tr>
+        <tr><td>Issue</td><td>${(data.error_description || '').split('.')[0]}</td></tr>
+        <tr><td>Suggested</td><td>${hasCorrection ? `<span class="val-yellow">${data.corrected_value}</span>` : 'No auto-correction available'}</td></tr>
+      </table>
+      <div class="hr-reason">${data.action_card}</div>
+      <div id="overrideRow" style="display:none" class="override-row">
+        <input class="override-input" id="overrideInput" type="text"
+          placeholder="Enter corrected value"
+          value="${hasCorrection ? data.corrected_value : ''}"/>
+        <button class="override-submit" onclick="submitOverride()">Submit</button>
+      </div>
+      <div class="hr-actions">
+        ${confirmBtn}
+        <button class="hr-btn btn-override" id="btnOverride" onclick="toggleOverride()">↩ Override</button>
+        <button class="hr-btn btn-escalate" id="btnEscalate" onclick="resolveAction('escalate')">↗ Escalate</button>
+      </div>
+    </div>`;
+    document.getElementById('resultPanel').innerHTML = h;
+  }
+
+  function toggleOverride() {
+    const row = document.getElementById('overrideRow');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+    if (row.style.display === 'flex') document.getElementById('overrideInput').focus();
+  }
+
+  async function submitOverride() {
+    const val = document.getElementById('overrideInput').value.trim();
+    if (!val) return;
+    await postResolve('override', val);
+  }
+
+  async function resolveAction(action) {
+    await postResolve(action, null);
+  }
+
+  async function postResolve(action, overrideValue) {
+    if (!currentRejectionId) return;
+    disableHRButtons();
+    try {
+      const body = { rejection_id: currentRejectionId, action };
+      if (overrideValue) body.override_value = overrideValue;
+      await fetch('/api/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      // Update the card
+      const isEscalate = action === 'escalate';
+      const card = document.getElementById('hrCard');
+      if (card) {
+        const msg = isEscalate
+          ? '↗ Escalated to benefits administrator. Logged.'
+          : overrideValue
+            ? `✅ Override submitted. Value "${overrideValue}" logged for resubmission.`
+            : '✅ Resolved by reviewer. Fix confirmed and logged.';
+        const cls = isEscalate ? 'escalated' : 'confirmed';
+        card.innerHTML = `<div class="resolve-msg ${cls}">${msg}</div>`;
+      }
+
+      // Update queue badge
+      if (currentRejectionId) {
+        const badgeEl = document.getElementById('qs-badge-' + currentRejectionId);
+        if (badgeEl) {
+          if (isEscalate) {
+            badgeEl.className = 'status-badge badge-escalated';
+            badgeEl.textContent = 'ESCALATED';
+          } else {
+            badgeEl.className = 'status-badge badge-auto';
+            badgeEl.textContent = 'AUTO_FIXED';
+          }
+        }
+      }
+    } catch(e) {
+      const card = document.getElementById('hrCard');
+      if (card) card.innerHTML += `<div style="color:var(--red);font-size:11px;margin-top:8px">Error: ${e.message}</div>`;
+    }
+  }
+
+  function disableHRButtons() {
+    ['btnConfirm','btnOverride','btnEscalate'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
+    const row = document.getElementById('overrideRow');
+    if (row) {
+      const input = document.getElementById('overrideInput');
+      const btn = row.querySelector('.override-submit');
+      if (input) input.disabled = true;
+      if (btn) btn.disabled = true;
+    }
+  }
+
+  // ── Node detail ────────────────────────────────────────────────────────────
+  function renderNodeDetail(name) {
+    if (!pipelineData) {
+      document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Run the pipeline first.</div>';
+      return;
+    }
+    const step = pipelineData.steps.find(s => s.node === name);
+    if (!step) return;
+    const meta = NODE_META[name];
+
+    let h = `<div class="detail-header">
+      <div class="detail-icon">${meta.icon}</div>
+      <div>
+        <div class="detail-name">${meta.label}</div>
+        <div class="detail-role">${meta.role}</div>
+        <span class="detail-badge">Completed in ${step.duration_ms}ms</span>
+      </div>
+    </div>`;
+
+    // Inputs
+    h += `<div class="section-block"><div class="block-label">Inputs</div><table class="kv-table">`;
+    for (const [k, v] of Object.entries(step.inputs)) {
+      const d = typeof v === 'string' && v.length > 70 ? v.slice(0,70)+'…' : JSON.stringify(v) ?? '—';
+      h += `<tr><td>${k}</td><td>${d}</td></tr>`;
+    }
+    h += `</table></div>`;
+
+    // Outputs
+    h += `<div class="section-block"><div class="block-label">Outputs</div>`;
+    if (name === 'parser') h += renderParserOut(step.outputs);
+    else if (name === 'healer') h += renderHealerOut(step.outputs);
+    else if (name === 'critic') h += renderCriticOut(step.outputs);
+    else {
+      h += `<table class="kv-table">`;
+      for (const [k, v] of Object.entries(step.outputs)) {
+        const d = k === 'status'
+          ? (v === 'AUTO_FIXED' ? `<span class="val-green">${v}</span>` : `<span class="val-yellow">${v}</span>`)
+          : (JSON.stringify(v) ?? '—');
+        h += `<tr><td>${k}</td><td>${d}</td></tr>`;
+      }
+      h += `</table>`;
+    }
+    h += `</div>`;
+
+    if (step.reasoning) {
+      h += `<div class="section-block"><div class="block-label">Reasoning</div>
+        <div class="reasoning-box">${step.reasoning.replace(/^\[\w+\]\s*/, '')}</div></div>`;
+    }
+    document.getElementById('nodeDetail').innerHTML = h;
+  }
+
+  function renderParserOut(o) {
+    let h = `<table class="kv-table">
+      <tr><td>employee_id</td><td><span class="val-green">${o.employee_id}</span></td></tr>
+      <tr><td>error_code</td><td>${o.error_code}</td></tr>
+      <tr><td>field_affected</td><td>${o.field_affected}</td></tr>
+      <tr><td>submitted_value</td><td><span class="val-yellow">${o.submitted_value}</span></td></tr>
+      <tr><td>kb_evidence</td><td>${o.kb_evidence_chars} chars</td></tr>
+    </table>`;
+    if (o.top_candidates) {
+      h += `<div style="margin-top:8px"><div class="block-label">RAG Candidates</div>
+        <div class="tag-list">${[...o.top_candidates.employee_ids, ...o.top_candidates.error_codes.map(c=>'E-'+c)].map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>`;
+    }
+    if (o.error_description) {
+      h += `<div style="margin-top:8px"><div class="block-label">KB Evidence</div>
+        <div class="kb-box">${o.error_description}</div></div>`;
+    }
+    return h;
+  }
+
+  function renderHealerOut(o) {
+    let h = `<table class="kv-table">
+      <tr><td>corrected_value</td><td><span class="val-green">${o.corrected_value ?? 'n/a'}</span></td></tr>
+      <tr><td>match_index</td><td>Record[${o.match_index}]</td></tr>
+    </table>`;
+    if (o.mismatch_log) {
+      h += `<div style="margin-top:8px"><div class="block-label">Mismatch Log</div>
+        <div class="reasoning-box">${o.mismatch_log}</div></div>`;
+    }
+    if (o.search_depth?.length) {
+      h += `<div style="margin-top:8px"><div class="block-label">Search Depth</div>`;
+      o.search_depth.forEach(row => {
+        const match = row.includes('MATCH');
+        h += `<div class="check-row">
+          <span class="${match ? 'check-pass' : ''}" style="font-size:10px">${match ? '✓' : '○'}</span>
+          <span style="font-size:10px;color:${match ? 'var(--green)' : 'var(--muted)'}">${row}</span></div>`;
+      });
+      h += `</div>`;
+    }
+    return h;
+  }
+
+  function renderCriticOut(o) {
+    const pct = Math.round((o.confidence_score || 0) * 100);
+    const cls = o.valid ? 'high' : 'low';
+    let h = `<table class="kv-table">
+      <tr><td>pattern</td><td style="font-family:monospace">${o.pattern_tested}</td></tr>
+      <tr><td>checks</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
+      <tr><td>confidence</td><td>${pct}%
+        <div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div></td></tr>
+    </table>`;
+    if (o.validation_log?.length) {
+      h += `<div style="margin-top:8px"><div class="block-label">Validation Log</div>`;
+      o.validation_log.forEach(entry => {
+        const pass = entry.includes('→ PASS');
+        const skip = entry.includes('Skipped') || entry.includes('skipping') || entry.includes('Pre-flagged');
+        const icon = skip ? '—' : (pass ? '✓' : '✗');
+        const cls = skip ? 'check-skip' : (pass ? 'check-pass' : 'check-fail');
+        h += `<div class="check-row"><span class="${cls}">${icon}</span>
+          <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+      });
+      h += `</div>`;
+    }
+    if (o.summary) h += `<div style="margin-top:6px" class="reasoning-box">${o.summary}</div>`;
+    return h;
+  }
+
+  // ── Trace / compliance / reasoning ────────────────────────────────────────
   function renderTrace(steps) {
+    const badges = {parser:'badge-parser',healer:'badge-healer',critic:'badge-critic',messenger:'badge-messenger'};
     let h = '';
     steps.forEach(step => {
-      const bc = BADGE[step.node] || '';
-      h += `<div class="trace-entry"><span class="trace-badge ${bc}">${step.node}</span>`;
+      h += `<div class="trace-entry"><span class="trace-badge ${badges[step.node]||''}">${step.node}</span>`;
       const t = step.trace || {};
       for (const [k, v] of Object.entries(t)) {
         if (k === 'node') continue;
-        if (Array.isArray(v)) {
-          h += `<div class="trace-kv">${k}: <span>[${v.length} entries]</span></div>`;
-        } else {
-          const display = typeof v === 'string' && v.length > 80 ? v.slice(0,80)+'…' : JSON.stringify(v);
-          h += `<div class="trace-kv">${k}: <span>${display}</span></div>`;
-        }
+        const d = Array.isArray(v) ? `[${v.length} entries]` :
+                  (typeof v === 'string' && v.length > 80 ? v.slice(0,80)+'…' : JSON.stringify(v));
+        h += `<div class="trace-kv">${k}: <span>${d}</span></div>`;
       }
       h += `</div>`;
     });
@@ -576,105 +898,54 @@
   function renderCompliance(cr) {
     if (!cr) return;
     const lat = cr.latency_ms || {};
-    const nodes = [['parser','RAG Extractor'],['healer','DB Lookup'],['critic','Compliance Guard'],['messenger','Action Card']];
+    const nodeOrder = ['parser','healer','critic','messenger'];
+    const roles = {parser:'RAG Extractor',healer:'DB Lookup',critic:'Compliance Guard',messenger:'Action Card'};
     let h = `<div class="compliance-block"><div class="compliance-title">Node Latencies</div>`;
-    nodes.forEach(([n, role]) => {
-      if (lat[n] != null) {
-        h += `<div class="latency-row"><span class="latency-node">${n} <span style="color:var(--accent2);font-size:9px">(${role})</span></span><span class="latency-val">${lat[n]}ms</span></div>`;
-      }
+    nodeOrder.forEach(n => {
+      if (lat[n] != null)
+        h += `<div class="latency-row"><span class="latency-node">${n} <span style="font-size:9px;color:var(--accent2)">(${roles[n]})</span></span><span class="latency-val">${lat[n]}ms</span></div>`;
     });
     h += `<div class="latency-row" style="font-weight:600"><span class="latency-node">total</span><span class="latency-val">${cr.total_ms}ms</span></div></div>`;
 
-    h += `<div class="compliance-block"><div class="compliance-title">Compliance Checks (${cr.checks_passed}/${cr.checks_total})</div>`;
+    h += `<div class="compliance-block"><div class="compliance-title">Compliance (${cr.checks_passed}/${cr.checks_total})</div>`;
     (cr.validation_log || []).forEach(entry => {
       const pass = entry.includes('→ PASS');
-      h += `<div class="check-row"><span class="check-icon ${pass ? 'check-pass' : 'check-fail'}">${pass ? '✓' : '✗'}</span>
-        <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+      const skip = entry.includes('Skipped') || entry.includes('skipping') || entry.includes('Pre-flagged');
+      const icon = skip ? '—' : (pass ? '✓' : '✗');
+      const cls = skip ? 'check-skip' : (pass ? 'check-pass' : 'check-fail');
+      h += `<div class="check-row"><span class="${cls}">${icon}</span><span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
     });
     h += `</div>`;
 
-    h += `<div class="compliance-block"><div class="compliance-title">Mismatch Detection</div>
-      <div class="kb-box">${cr.mismatch_log || 'n/a'}</div></div>`;
-
-    h += `<div class="compliance-block"><div class="compliance-title">KB Evidence (${cr.kb_evidence_chars} chars)</div>
-      <div class="kb-box">${(cr.kb_evidence || '').slice(0, 300)}${(cr.kb_evidence || '').length > 300 ? '…' : ''}</div></div>`;
-
+    if (cr.mismatch_log) {
+      h += `<div class="compliance-block"><div class="compliance-title">Mismatch Log</div>
+        <div class="kb-box">${cr.mismatch_log}</div></div>`;
+    }
+    if (cr.kb_evidence) {
+      h += `<div class="compliance-block"><div class="compliance-title">KB Evidence (${cr.kb_evidence_chars} chars)</div>
+        <div class="kb-box">${cr.kb_evidence.slice(0, 280)}${cr.kb_evidence.length > 280 ? '…' : ''}</div></div>`;
+    }
     document.getElementById('tab-compliance').innerHTML = h;
   }
 
   function renderReasoningPath(path) {
-    if (!path || !path.length) {
-      document.getElementById('tab-reasoning').innerHTML = '<div class="placeholder" style="margin-top:16px">No reasoning path.</div>';
+    if (!path?.length) {
+      document.getElementById('tab-reasoning').innerHTML = '<div class="placeholder" style="margin-top:12px">No reasoning path.</div>';
       return;
     }
     let h = '';
     path.forEach((entry, i) => {
-      const nodeMatch = entry.match(/^\[(\w+)\]\s*(.*)/s);
-      const nodeName = nodeMatch ? nodeMatch[1] : 'Node';
-      const text = nodeMatch ? nodeMatch[2] : entry;
-      h += `<div class="reasoning-path-entry">
-        <div style="margin-bottom:4px"><span class="rp-node">[${nodeName}]</span> <span style="font-size:9px;color:var(--muted)">step ${i+1}</span></div>
-        <div style="font-size:10.5px;color:#94a3b8;line-height:1.5">${text}</div>
+      const m = entry.match(/^\[(\w+)\]\s*(.*)/s);
+      h += `<div class="rp-entry">
+        <div style="margin-bottom:3px"><span class="rp-node">[${m ? m[1] : 'Node'}]</span> <span style="font-size:9px;color:var(--muted)">step ${i+1}</span></div>
+        <div style="font-size:10px;color:#94a3b8;line-height:1.5">${m ? m[2] : entry}</div>
       </div>`;
     });
     document.getElementById('tab-reasoning').innerHTML = h;
   }
 
-  async function runPipeline() {
-    const btn = document.getElementById('runBtn');
-    btn.disabled = true;
-    btn.innerHTML = '⏳ Running…';
-
-    NODE_ORDER.forEach(n => { setNodeState(n, 'idle'); document.getElementById('time-' + n).textContent = ''; });
-    ['conn-1','conn-2','conn-3'].forEach(id => document.getElementById(id).classList.remove('flowing'));
-    setProgress(0);
-    document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Pipeline running…</div>';
-    document.getElementById('resultPanel').innerHTML = '<div class="placeholder">Running…</div>';
-    document.getElementById('tab-trace').innerHTML = '<div class="placeholder" style="margin-top:16px">Collecting trace…</div>';
-
-    // Animate nodes running (staggered, matches ~500ms sleep per node)
-    const DELAYS = [0, 600, 1200, 1700];
-    NODE_ORDER.forEach((n, i) => {
-      setTimeout(() => {
-        setNodeState(n, 'running');
-        setProgress((i + 1) * 18);
-        if (i > 0) flowConnector(i);
-      }, DELAYS[i]);
-    });
-
-    try {
-      const res = await fetch('/api/run');
-      const data = await res.json();
-      pipelineData = data;
-
-      // Settle all nodes to done
-      NODE_ORDER.forEach((n, i) => {
-        setTimeout(() => {
-          setNodeState(n, 'done');
-          const step = data.steps.find(s => s.node === n);
-          if (step) setTime(n, step.duration_ms);
-          if (i === NODE_ORDER.length - 1) {
-            flowConnector(3);
-            setProgress(100);
-            renderResult(data);
-            renderTrace(data.steps);
-            renderCompliance(data.compliance_report);
-            renderReasoningPath(data.reasoning_path);
-            if (selectedNode) renderNodeDetail(selectedNode);
-            btn.disabled = false;
-            btn.innerHTML = '▶ Run Again';
-          }
-        }, DELAYS[i] + 150);
-      });
-
-    } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = '▶ Run Pipeline';
-      NODE_ORDER.forEach(n => setNodeState(n, 'idle'));
-      document.getElementById('resultPanel').innerHTML =
-        `<div class="placeholder" style="color:var(--red)">Error: ${err.message}<br/>Is the API server running?</div>`;
-    }
-  }
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', loadQueue);
 </script>
 </body>
 </html>

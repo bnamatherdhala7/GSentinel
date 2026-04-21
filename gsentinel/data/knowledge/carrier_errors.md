@@ -3,8 +3,8 @@
 ## Error 402 — Invalid Zip Code
 The zip code submitted does not match USPS 5-digit format. Cross-reference internal HR record and resubmit with corrected zip.
 
-## Error 415 — Missing Date of Birth
-A required date of birth field is blank or malformed. Must be formatted YYYY-MM-DD. Required for all dependents.
+## Error 415 — Missing or Malformed Date of Birth
+A dependent date of birth is blank or fails YYYY-MM-DD validation. Cross-reference HR dependent records and resubmit with corrected date.
 
 ## Error 501 — Duplicate Enrollment
 This employee ID was already submitted in the current enrollment window. Check for duplicate records before resubmitting.

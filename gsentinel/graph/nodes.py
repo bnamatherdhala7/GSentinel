@@ -5,26 +5,23 @@ from pathlib import Path
 
 BASE = Path(__file__).parent.parent
 
+# Strict DOB validation: month 01-12, day 01-31
+_VALID_DOB = re.compile(r'^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$')
+
 
 # ---------------------------------------------------------------------------
 # Parser — RAG-simulated extraction with candidate scoring
 # ---------------------------------------------------------------------------
 def parser_node(state: dict) -> dict:
     t_start = time.time()
-    time.sleep(0.5)  # deliberate "thinking" pause for UI breathing
+    time.sleep(0.5)
 
     text = state["raw_input"]
 
-    # --- RAG simulation: surface ALL candidate IDs and codes first ---
     all_emp_ids = list(dict.fromkeys(re.findall(r"EMP\d+", text)))
     all_err_codes = list(dict.fromkeys(re.findall(r"(?:ERROR CODE:\s*|(?<!\d))(\d{3})(?!\d)", text)))
+    top_candidates = {"employee_ids": all_emp_ids, "error_codes": all_err_codes}
 
-    top_candidates = {
-        "employee_ids": all_emp_ids,
-        "error_codes": all_err_codes,
-    }
-
-    # --- Primary extraction ---
     emp_match = re.search(r"RECORD:\s*(EMP\d+)", text)
     err_match = re.search(r"ERROR CODE:\s*(\d+)", text)
     field_match = re.search(r"FIELD:\s*(\S+)", text)
@@ -38,7 +35,6 @@ def parser_node(state: dict) -> dict:
     state["field_affected"] = field_match.group(1) if field_match else None
     state["submitted_value"] = val_match.group(1) if val_match else None
 
-    # --- RAG: knowledge base lookup ---
     kb_text = (BASE / "data/knowledge/carrier_errors.md").read_text()
     section_match = re.search(
         rf"(## Error {error_code}[^\n]*\n.*?)(?=\n## |\Z)", kb_text, re.DOTALL
@@ -46,9 +42,8 @@ def parser_node(state: dict) -> dict:
     kb_section = section_match.group(1).strip() if section_match else f"## Error {error_code} — Unknown"
     kb_body = re.sub(r"^## Error \d+[^\n]*\n", "", kb_section).strip()
     state["error_description"] = kb_body
-    state["kb_evidence"] = kb_section  # full heading + body stored as evidence
+    state["kb_evidence"] = kb_section
 
-    # --- Reasoning string ---
     reasoning = (
         f"Scanned document — found {len(all_emp_ids)} employee anchor(s): {all_emp_ids}. "
         f"Selected '{emp_id}' as primary: appears in RECORD field (highest-confidence anchor). "
@@ -60,7 +55,6 @@ def parser_node(state: dict) -> dict:
 
     elapsed = round((time.time() - t_start) * 1000)
     state["latency_ms"]["parser"] = elapsed
-
     state["trace"].append({
         "node": "parser",
         "latency_ms": elapsed,
@@ -81,13 +75,12 @@ def parser_node(state: dict) -> dict:
 # ---------------------------------------------------------------------------
 def healer_node(state: dict) -> dict:
     t_start = time.time()
-    time.sleep(0.5)  # deliberate "thinking" pause for UI breathing
+    time.sleep(0.5)
 
     db = json.loads((BASE / "data/internal_db.json").read_text())
     target_id = state["employee_id"]
     code = state["error_code"]
 
-    # --- search_depth: log every record scanned ---
     search_depth = []
     emp = None
     match_index = -1
@@ -101,9 +94,10 @@ def healer_node(state: dict) -> dict:
             match_index = idx
             break
 
-    # --- Extract corrected value and log the mismatch ---
     corrected = None
     mismatch_log = None
+    healer_override_confidence = None  # set only when healer flags non-fixable
+
     if emp:
         if code == "402":
             corrected = emp["address"]["zip"]
@@ -112,13 +106,34 @@ def healer_node(state: dict) -> dict:
                 f"Carrier submitted '{state['submitted_value']}' → "
                 f"{'MISMATCH — length ' + str(len(state['submitted_value'])) + ' vs required 5' if corrected != state['submitted_value'] else 'values equal, no change'}"
             )
+
         elif code == "415":
-            corrected = emp["dob"]
+            # Find dependent with invalid DOB in HR records
+            bad_dep = None
+            for dep in emp.get("dependents", []):
+                if not _VALID_DOB.match(dep.get("dob", "")):
+                    bad_dep = dep
+                    break
+            if bad_dep:
+                corrected = bad_dep["dob"]  # malformed value — stored as evidence, not a fix
+                mismatch_log = (
+                    f"Record[{match_index}].dependents → '{bad_dep['name']}' "
+                    f"has malformed dob='{bad_dep['dob']}'. "
+                    f"HR record is also invalid — cannot auto-correct."
+                )
+                healer_override_confidence = 0.5
+            else:
+                mismatch_log = "No malformed dependent DOB found in HR records."
+
+        elif code == "501":
+            dup_of = emp.get("duplicate_of")
             mismatch_log = (
-                f"Record[{match_index}].dob = '{corrected}' | "
-                f"Carrier submitted '{state['submitted_value']}' → "
-                f"{'MISMATCH — DOB field malformed' if corrected != state['submitted_value'] else 'values equal'}"
+                f"Record[{match_index}] has duplicate_flag=True. "
+                f"Flagged as duplicate of {dup_of}. "
+                f"Human must determine which record to retain."
             )
+            healer_override_confidence = 0.5
+
         elif code == "610":
             corrected = emp["ssn_last4"]
             mismatch_log = (
@@ -129,16 +144,26 @@ def healer_node(state: dict) -> dict:
 
     state["corrected_value"] = corrected
 
+    # Signal non-fixable scenarios to the critic
+    if healer_override_confidence is not None:
+        state["confidence_score"] = healer_override_confidence
+
+    if code == "415" and healer_override_confidence == 0.5:
+        reasoning_detail = "Dependent DOB in HR record is also malformed. Cannot auto-correct. Routing to human review."
+    elif code == "501":
+        reasoning_detail = f"Duplicate enrollment detected. {emp.get('name', target_id)} flagged as duplicate of {emp.get('duplicate_of', 'unknown')}. Human must determine which record to retain."
+    else:
+        reasoning_detail = mismatch_log or f"No correctable field found for error code {code}."
+
     reasoning = (
         f"Opened internal_db.json — scanned {len(db['employees'])} record(s). "
         f"Located {target_id} at index {match_index}. "
-        f"{mismatch_log or 'No correctable field found for error code ' + str(code) + '.'}"
+        f"{reasoning_detail}"
     )
     state["reasoning_path"].append(f"[Healer] {reasoning}")
 
     elapsed = round((time.time() - t_start) * 1000)
     state["latency_ms"]["healer"] = elapsed
-
     state["trace"].append({
         "node": "healer",
         "latency_ms": elapsed,
@@ -148,6 +173,7 @@ def healer_node(state: dict) -> dict:
         "error_code": code,
         "corrected_value": corrected,
         "mismatch_log": mismatch_log,
+        "healer_override_confidence": healer_override_confidence,
         "source": "internal_db.json",
     })
     return state
@@ -163,9 +189,35 @@ def critic_node(state: dict) -> dict:
     code = state["error_code"]
     value = state["corrected_value"] or ""
 
+    # If healer already flagged non-fixable (confidence pre-set to 0.5), pass through
+    if state["confidence_score"] == 0.5:
+        validation_log = [
+            f"Check 1 — Pre-flagged by Healer as non-fixable for Error {code} — skipping format validation",
+            f"Check 2 — Skipped (non-fixable path)",
+            f"Check 3 — Skipped (non-fixable path)",
+        ]
+        summary = f"Error {code} routed to HUMAN_REVIEW by Healer. Confidence held at 0.5."
+        reasoning = f"Healer pre-flagged Error {code} as non-fixable. Passing through confidence=0.5. No validation run."
+        state["reasoning_path"].append(f"[Critic] {reasoning}")
+        elapsed = round((time.time() - t_start) * 1000)
+        state["latency_ms"]["critic"] = elapsed
+        state["trace"].append({
+            "node": "critic",
+            "role": "Jailbreak & Compliance Guard",
+            "latency_ms": elapsed,
+            "corrected_value": value,
+            "pattern_tested": "n/a — non-fixable path",
+            "validation_log": validation_log,
+            "checks_passed": 0,
+            "checks_total": 3,
+            "confidence_score": 0.5,
+            "summary": summary,
+        })
+        return state
+
     pattern_map = {
         "402": schema["zip_format"],
-        "415": r"^\d{4}-\d{2}-\d{2}$",
+        "415": r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$",
         "610": schema["ssn_last4_format"],
     }
 
@@ -174,19 +226,16 @@ def critic_node(state: dict) -> dict:
     pattern = pattern_map.get(code, r"^.+$")
     validation_log = []
 
-    # Check 1 — format guard (schema regex)
     check1 = bool(re.match(pattern, value))
     validation_log.append(
         f"Check 1 — Format guard: regex='{pattern}' | value='{value}' → {'PASS' if check1 else 'FAIL'}"
     )
 
-    # Check 2 — jailbreak / blocked-value guard
     check2 = value not in BLOCKED_VALUES
     validation_log.append(
         f"Check 2 — Jailbreak guard: value '{value}' not in blocked list → {'PASS' if check2 else 'FAIL — blocked sentinel value'}"
     )
 
-    # Check 3 — injection guard (numeric fields must be all-digit)
     numeric_codes = {"402", "610"}
     check3 = value.isdigit() if code in numeric_codes else True
     validation_log.append(
@@ -202,7 +251,6 @@ def critic_node(state: dict) -> dict:
         f"Field '{state['field_affected']}' failed {sum(not c for c in [check1, check2, check3])} check(s). "
         f"Confidence degraded to {state['confidence_score']}."
     )
-
     reasoning = (
         f"Jailbreak & Compliance Guard activated for Error {code}. "
         f"Tested '{value}' against pattern '{pattern}'. "
@@ -212,7 +260,6 @@ def critic_node(state: dict) -> dict:
 
     elapsed = round((time.time() - t_start) * 1000)
     state["latency_ms"]["critic"] = elapsed
-
     state["trace"].append({
         "node": "critic",
         "role": "Jailbreak & Compliance Guard",
@@ -264,6 +311,33 @@ def messenger_node(state: dict) -> dict:
             f"  No action needed. Record is ready for resubmission."
         )
         state["status"] = "AUTO_FIXED"
+
+    elif error_code == "415":
+        # Find the bad dependent name for the specific card
+        bad_dep_name = "Unknown dependent"
+        bad_dep_dob = corrected or original or "unknown"
+        if emp:
+            for dep in emp.get("dependents", []):
+                if not _VALID_DOB.match(dep.get("dob", "")):
+                    bad_dep_name = dep["name"]
+                    bad_dep_dob = dep["dob"]
+                    break
+        state["action_card"] = (
+            f"⚠️  Action needed: {bad_dep_name}'s date of birth on file is invalid\n"
+            f"    ({bad_dep_dob}). Please correct the dependent's DOB in HR records\n"
+            f"    and resubmit {name}'s enrollment."
+        )
+        state["status"] = "HUMAN_REVIEW"
+
+    elif error_code == "501":
+        dup_of = emp.get("duplicate_of", "unknown") if emp else "unknown"
+        state["action_card"] = (
+            f"⚠️  Action needed: {name}'s enrollment was flagged as a duplicate\n"
+            f"    of an existing record ({dup_of}). Please review both records and\n"
+            f"    confirm which should be retained before resubmitting."
+        )
+        state["status"] = "HUMAN_REVIEW"
+
     else:
         state["action_card"] = (
             f"⚠️  Enrollment Review Required — HUMAN_REVIEW\n\n"
@@ -286,7 +360,6 @@ def messenger_node(state: dict) -> dict:
 
     elapsed = round((time.time() - t_start) * 1000)
     state["latency_ms"]["messenger"] = elapsed
-
     state["trace"].append({
         "node": "messenger",
         "latency_ms": elapsed,
