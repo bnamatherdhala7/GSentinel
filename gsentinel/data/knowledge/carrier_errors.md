@@ -14,3 +14,9 @@ The plan code submitted does not match any active carrier plan for this group. V
 
 ## Error 610 — SSN Format Error
 The Social Security Number field is malformed or contains non-numeric characters. SSN last 4 must be exactly 4 digits.
+
+## Error 209 — Invalid Coverage Tier
+The coverage tier submitted does not match the dependent enrollment records on file. Valid tiers: EE_ONLY, EE_SPOUSE, EE_PLUS_CHILDREN, EE_PLUS_ONE, FAMILY. Cross-reference dependents in the HR record to determine the correct tier.
+
+## Error 716 — Enrollment Window Expired
+The enrollment submission date exceeds the 60-day qualifying life event (QLE) window. Carriers require enrollment to be submitted within 60 days of the qualifying event (birth, marriage, loss of other coverage, etc.). A carrier exception request must be filed to proceed outside this window.

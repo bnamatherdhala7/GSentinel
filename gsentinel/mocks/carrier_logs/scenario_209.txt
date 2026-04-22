@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP004 | Taylor Kim
+ERROR CODE: 209
+FIELD: coverage_tier
+SUBMITTED VALUE: "EE_ONLY"
+MESSAGE: Coverage tier does not match dependent enrollment on file. Employee has active dependents enrolled. Resubmit with correct coverage tier.
+---
+END OF REJECTION NOTICE

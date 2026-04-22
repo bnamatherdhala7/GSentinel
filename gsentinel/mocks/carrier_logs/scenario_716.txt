@@ -1,0 +1,11 @@
+CARRIER REJECTION NOTICE
+Date: 2026-04-20
+Group ID: GRP-00142
+---
+RECORD: EMP004 | Taylor Kim
+ERROR CODE: 716
+FIELD: enrollment_date
+SUBMITTED VALUE: "2026-05-05"
+MESSAGE: Enrollment submission exceeds 60-day qualifying life event window. QLE (newborn) occurred on 2026-03-01. Enrollment must be submitted within 60 days of the qualifying event. Exception request required.
+---
+END OF REJECTION NOTICE

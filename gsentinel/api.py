@@ -50,6 +50,16 @@ MOCK_QUEUE = [
         "error_code": "308", "field": "plan_code", "status": "AUTO_FIXED",
         "scenario_file": "scenario_308.txt", "timestamp": "2026-04-20T10:58:00Z",
     },
+    {
+        "id": "REJ-007", "employee_id": "EMP004", "employee_name": "Taylor Kim",
+        "error_code": "209", "field": "coverage_tier", "status": "AUTO_FIXED",
+        "scenario_file": "scenario_209.txt", "timestamp": "2026-04-20T11:30:00Z",
+    },
+    {
+        "id": "REJ-008", "employee_id": "EMP004", "employee_name": "Taylor Kim",
+        "error_code": "716", "field": "enrollment_date", "status": "HUMAN_REVIEW",
+        "scenario_file": "scenario_716.txt", "timestamp": "2026-04-20T12:15:00Z",
+    },
 ]
 
 

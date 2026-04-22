@@ -12,6 +12,7 @@
         "zip": "78701"
       },
       "plan": "GOLD_PPO",
+      "coverage_tier": "EE_ONLY",
       "dependents": []
     },
     {
@@ -26,6 +27,7 @@
         "zip": "80201"
       },
       "plan": "SILVER_HMO",
+      "coverage_tier": "EE_PLUS_CHILDREN",
       "dependents": [
         { "name": "Casey Smith", "dob": "2019-11-05", "relation": "child" },
         { "name": "Riley Smith", "dob": "2021-13-40", "relation": "child" }
@@ -43,9 +45,29 @@
         "zip": "97201"
       },
       "plan": "BRONZE_EPO",
+      "coverage_tier": "EE_ONLY",
       "dependents": [],
       "duplicate_flag": true,
       "duplicate_of": "EMP003-A"
+    },
+    {
+      "id": "EMP004",
+      "name": "Taylor Kim",
+      "dob": "1995-08-12",
+      "ssn_last4": "7732",
+      "address": {
+        "street": "501 Pine Blvd",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98101"
+      },
+      "plan": "GOLD_PPO",
+      "coverage_tier": "EE_PLUS_CHILDREN",
+      "dependents": [
+        { "name": "Sam Kim", "dob": "2026-01-15", "relation": "child" }
+      ],
+      "qle_date": "2026-01-15",
+      "qle_type": "newborn"
     }
   ]
 }

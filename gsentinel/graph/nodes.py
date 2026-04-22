@@ -1,6 +1,7 @@
 import re
 import json
 import time
+from datetime import datetime as _dt
 from pathlib import Path
 
 BASE = Path(__file__).parent.parent
@@ -152,6 +153,40 @@ def healer_node(state: dict) -> dict:
                 f"{'MISMATCH — not a recognized carrier plan code' if corrected != submitted else 'values equal, no change'}"
             )
 
+        elif code == "209":
+            db_tier = emp.get("coverage_tier", "EE_ONLY")
+            submitted = state["submitted_value"] or ""
+            corrected = db_tier
+            dep_count = len(emp.get("dependents", []))
+            mismatch_log = (
+                f"Record[{match_index}].coverage_tier = '{corrected}' | "
+                f"Carrier submitted '{submitted}' → "
+                f"{'MISMATCH — employee has ' + str(dep_count) + ' dependent(s) on file; tier should be ' + corrected if corrected != submitted else 'values equal, no change'}"
+            )
+
+        elif code == "716":
+            qle_date_str = emp.get("qle_date", "")
+            qle_type = emp.get("qle_type", "qualifying life event")
+            submitted_date_str = state["submitted_value"] or ""
+            days_since_qle = None
+            if qle_date_str and submitted_date_str:
+                try:
+                    qle_dt = _dt.strptime(qle_date_str, "%Y-%m-%d")
+                    sub_dt = _dt.strptime(submitted_date_str, "%Y-%m-%d")
+                    days_since_qle = (sub_dt - qle_dt).days
+                    mismatch_log = (
+                        f"Record[{match_index}].qle_date = '{qle_date_str}' ({qle_type}) | "
+                        f"Enrollment submitted '{submitted_date_str}' = {days_since_qle} days after QLE. "
+                        f"60-day window expired {days_since_qle - 60} day(s) ago."
+                    )
+                except ValueError:
+                    mismatch_log = "QLE date or enrollment date could not be parsed."
+            else:
+                mismatch_log = "QLE date or submission date missing from HR records."
+            healer_override_confidence = 0.5
+            state["_days_since_qle"] = days_since_qle  # pass to reasoning section
+            state["_qle_date_str"] = qle_date_str
+
     state["corrected_value"] = corrected
 
     # Signal non-fixable scenarios to the critic
@@ -180,7 +215,19 @@ def healer_node(state: dict) -> dict:
             f"Two active records exist in the same enrollment window. "
             f"HR must determine which record to retain and remove the duplicate before resubmitting. Cannot auto-correct."
         )
+    elif code == "716" and healer_override_confidence == 0.5:
+        days_since_qle = state.pop("_days_since_qle", None)
+        qle_date_str = state.pop("_qle_date_str", "unknown")
+        days_str = f"{days_since_qle} days" if days_since_qle is not None else "an unknown number of days"
+        over_str = f"{days_since_qle - 60} day(s)" if days_since_qle is not None else "an unknown number of days"
+        reasoning_detail = (
+            f"Enrollment submitted {days_str} after QLE date '{qle_date_str}'. "
+            f"60-day carrier window expired {over_str} ago. "
+            f"Cannot auto-correct — carrier exception request must be filed by HR admin."
+        )
     else:
+        state.pop("_days_since_qle", None)
+        state.pop("_qle_date_str", None)
         reasoning_detail = mismatch_log or f"No correctable field found for error code {code}."
 
     reasoning = (
@@ -248,6 +295,7 @@ def critic_node(state: dict) -> dict:
         "415": r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$",
         "610": schema["ssn_last4_format"],
         "308": schema["plan_code_format"],
+        "209": schema["coverage_tier_format"],
     }
 
     BLOCKED_VALUES = {"00000", "99999", "11111", "12345", "00001"}
@@ -328,6 +376,7 @@ def messenger_node(state: dict) -> dict:
     checks_passed = checks_entry.get("checks_passed", "?")
     checks_total = checks_entry.get("checks_total", 3)
 
+    dep_count = len(emp.get("dependents", [])) if emp else 0
     reason_detail = {
         "402": (
             f"Zip code submitted was {len(original or '')} digit(s); "
@@ -342,6 +391,11 @@ def messenger_node(state: dict) -> dict:
         "308": (
             f"Plan code '{original}' is not a recognized carrier plan. "
             f"Corrected to '{corrected}' from authoritative HR record."
+        ),
+        "209": (
+            f"Coverage tier '{original}' doesn't match dependent records. "
+            f"Employee has {dep_count} dependent(s) on file — "
+            f"correct tier is '{corrected}'. Corrected from authoritative HR record."
         ),
     }.get(error_code, f"Submitted value corrected from authoritative HR record.")
 
@@ -380,6 +434,17 @@ def messenger_node(state: dict) -> dict:
             f"⚠️  Action needed: {name}'s enrollment was flagged as a duplicate\n"
             f"    of an existing record ({dup_of}). Please review both records and\n"
             f"    confirm which should be retained before resubmitting."
+        )
+        state["status"] = "HUMAN_REVIEW"
+
+    elif error_code == "716":
+        qle_date = emp.get("qle_date", "unknown") if emp else "unknown"
+        qle_type = emp.get("qle_type", "qualifying life event") if emp else "qualifying life event"
+        state["action_card"] = (
+            f"⚠️  Action needed: {name}'s enrollment was submitted outside the\n"
+            f"    60-day qualifying life event window. QLE ({qle_type}): {qle_date}.\n"
+            f"    Submitted: {original}. A carrier exception request must be filed\n"
+            f"    before this enrollment can be accepted."
         )
         state["status"] = "HUMAN_REVIEW"
 

@@ -5,5 +5,8 @@
   "dob_format": "YYYY-MM-DD",
   "ssn_last4_format": "^[0-9]{4}$",
   "plan_code_format": "^(GOLD_PPO|SILVER_HMO|BRONZE_EPO|PLATINUM_PPO)$",
-  "valid_plans": ["GOLD_PPO", "SILVER_HMO", "BRONZE_EPO", "PLATINUM_PPO"]
+  "coverage_tier_format": "^(EE_ONLY|EE_SPOUSE|EE_PLUS_CHILDREN|EE_PLUS_ONE|FAMILY)$",
+  "valid_plans": ["GOLD_PPO", "SILVER_HMO", "BRONZE_EPO", "PLATINUM_PPO"],
+  "valid_coverage_tiers": ["EE_ONLY", "EE_SPOUSE", "EE_PLUS_CHILDREN", "EE_PLUS_ONE", "FAMILY"],
+  "qle_window_days": 60
 }
