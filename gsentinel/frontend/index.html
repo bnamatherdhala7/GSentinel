@@ -499,8 +499,8 @@
             <div class="node-dot"></div>
             <span class="node-icon">⚖️</span>
             <div class="node-name">Critic</div>
-            <div class="node-role">Compliance Guard</div>
-            <div class="node-desc">Regex + rules engine — not AI</div>
+            <div class="node-role">Safety Checker</div>
+            <div class="node-desc">3 hardcoded safety checks — no AI involved</div>
             <div class="node-type-badge badge-code">⚙ Rules Engine</div>
             <div class="node-time" id="time-critic"></div>
           </div>
@@ -524,7 +524,7 @@
       <div class="pipeline-legend">
         <div class="legend-item"><div class="legend-dot-ai"></div> AI Agent — reads unstructured text, extracts fields, generates reasoning</div>
         <div style="width:1px;height:12px;background:var(--border)"></div>
-        <div class="legend-item"><div class="legend-dot-code"></div> Deterministic Code — DB lookup, regex validation, threshold routing. LLM never touches financial fields.</div>
+        <div class="legend-item"><div class="legend-dot-code"></div> Deterministic Code — DB lookup, format validation, threshold routing. LLM never touches financial fields.</div>
       </div>
 
       <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="progressFill"></div></div>
@@ -561,7 +561,7 @@
   const NODE_META = {
     parser:    {icon:'🔍', label:'Parser',    role:'RAG Extractor'},
     healer:    {icon:'🩺', label:'Healer',    role:'DB Lookup'},
-    critic:    {icon:'⚖️', label:'Critic',    role:'Compliance Guard'},
+    critic:    {icon:'⚖️', label:'Critic',    role:'Safety Checker'},
     messenger: {icon:'📨', label:'Messenger', role:'Action Card'},
   };
 
@@ -940,7 +940,7 @@
     critic: {
       type: 'code',
       ai: null,
-      code: 'Three deterministic checks run in sequence: (1) format regex from standard_enr.json, (2) blocked sentinel value list, (3) numeric injection guard. All hardcoded rules. No AI inference. Any failure → confidence < 0.9 → HUMAN_REVIEW.',
+      code: 'Three hardcoded safety checks run in sequence — no AI involved: (1) Pattern check — the corrected value must match the required format (e.g. 5-digit zip). (2) Blocked values check — rejects known placeholder or test values like 00000 or 99999 that should never appear in real enrollments. (3) Data type check — numeric fields must contain only digits, nothing else. Any failure drops confidence below 0.9 and routes to Human Review.',
     },
     messenger: {
       type: 'code',
@@ -1074,15 +1074,19 @@
     const pct = Math.round((o.confidence_score || 0) * 100);
     const cls = o.valid ? 'high' : 'low';
     let h = `<table class="kv-table">
-      <tr><td>pattern</td><td style="font-family:monospace;font-size:9px">${o.pattern_tested}</td></tr>
-      <tr><td>checks</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
+      <tr><td>required format</td><td style="font-family:monospace;font-size:9px">${o.pattern_tested}</td></tr>
+      <tr><td>checks passed</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
       <tr><td>confidence</td><td>${pct}%
         <div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div></td></tr>
     </table>`;
     if (o.validation_log?.length) {
-      const checkTypes = ['Format regex (standard_enr.json)', 'Jailbreak guard (blocked sentinel list)', 'Injection guard (type check)'];
+      const checkTypes = [
+        'Pattern check — value must match required format',
+        'Blocked values check — rejects known placeholder values (e.g. 00000, 99999)',
+        'Data type check — numeric fields must contain only digits'
+      ];
       h += `<div style="margin-top:8px">
-        <div class="rules-engine-header">Deterministic Rules Engine — 3 hardcoded checks</div>`;
+        <div class="rules-engine-header">3 Safety Checks — Hardcoded Rules, No AI</div>`;
       o.validation_log.forEach((entry, i) => {
         const pass = entry.includes('→ PASS');
         const skip = entry.includes('Skipped') || entry.includes('skipping') || entry.includes('Pre-flagged');
@@ -1120,7 +1124,7 @@
     if (!cr) return;
     const lat = cr.latency_ms || {};
     const nodeOrder = ['parser','healer','critic','messenger'];
-    const roles = {parser:'RAG Extractor',healer:'DB Lookup',critic:'Compliance Guard',messenger:'Action Card'};
+    const roles = {parser:'RAG Extractor',healer:'DB Lookup',critic:'Safety Checker',messenger:'Action Card'};
     let h = `<div class="compliance-block"><div class="compliance-title">Node Latencies</div>`;
     nodeOrder.forEach(n => {
       if (lat[n] != null)
