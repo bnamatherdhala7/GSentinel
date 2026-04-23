@@ -159,6 +159,70 @@
     .node-role { font-size: 9px; color: var(--accent2); font-weight: 600; margin-bottom: 3px; font-style: italic; }
     .node-desc { font-size: 9px; color: var(--muted); line-height: 1.4; }
     .node-time { font-size: 9px; color: var(--muted); margin-top: 6px; min-height: 12px; font-variant-numeric: tabular-nums; }
+    /* AI vs Code node badge */
+    .node-type-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 8px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+      padding: 2px 5px; border-radius: 3px; margin-top: 5px;
+    }
+    .badge-ai    { background: rgba(139,92,246,0.18); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+    .badge-code  { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+    .node.idle .node-type-badge, .node.running .node-type-badge, .node.done .node-type-badge { opacity: 1; }
+    /* AI boundary strip between Parser and Healer */
+    .ai-boundary {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; width: 40px; flex-shrink: 0;
+    }
+    .ai-boundary-line { height: 2px; width: 100%; background: var(--border); position: relative; }
+    .ai-boundary-label {
+      font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      color: rgba(139,92,246,0.7); white-space: nowrap; transform: rotate(0deg);
+      background: var(--bg); padding: 0 3px; border-radius: 2px;
+      border: 1px solid rgba(139,92,246,0.2);
+    }
+    .ai-boundary-arrow {
+      width: 0; height: 0;
+      border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+      border-left: 5px solid var(--border);
+    }
+    /* Pipeline legend */
+    .pipeline-legend {
+      display: flex; align-items: center; gap: 12px; margin-top: 8px;
+      padding: 5px 10px; background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border); border-radius: 5px; width: fit-content;
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--muted); }
+    .legend-dot-ai   { width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; }
+    .legend-dot-code { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    /* DB source provenance */
+    .db-source-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+    .db-source-pill {
+      font-size: 9px; font-family: 'SF Mono','Fira Code',monospace;
+      background: rgba(16,185,129,0.08); color: var(--green);
+      border: 1px solid rgba(16,185,129,0.2); border-radius: 4px; padding: 2px 7px;
+    }
+    .db-source-label { font-size: 9px; color: var(--muted); }
+    /* Rules engine header */
+    .rules-engine-header {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--green);
+    }
+    .rules-engine-header::before {
+      content: '⚙'; font-size: 10px;
+    }
+    /* Explainer banner */
+    .ai-explainer {
+      display: flex; gap: 8px; margin-bottom: 10px;
+      background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.18);
+      border-radius: 6px; padding: 8px 10px;
+    }
+    .explainer-col { flex: 1; }
+    .explainer-title { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .explainer-title.ai-title { color: #a78bfa; }
+    .explainer-title.code-title { color: var(--green); }
+    .explainer-body { font-size: 9px; color: var(--muted); line-height: 1.5; }
+    .explainer-divider { width: 1px; background: var(--border); flex-shrink: 0; }
 
     .connector { display: flex; align-items: center; width: 40px; flex-shrink: 0; }
     .connector-line {
@@ -359,7 +423,7 @@
     </div>
   </div>
   <div class="header-right">
-    <span class="version-badge">v0.4 · Queue + Human Review</span>
+    <span class="version-badge">v0.5 · AI Boundary Visible</span>
     <button class="run-btn" id="runBtn" onclick="runDefaultPipeline()">▶ Run Default</button>
   </div>
 </header>
@@ -403,11 +467,19 @@
             <span class="node-icon">🔍</span>
             <div class="node-name">Parser</div>
             <div class="node-role">RAG Extractor</div>
-            <div class="node-desc">Candidate scoring + KB lookup</div>
+            <div class="node-desc">Reads unstructured text → structured fields</div>
+            <div class="node-type-badge badge-ai">🤖 AI Agent</div>
             <div class="node-time" id="time-parser"></div>
           </div>
         </div>
-        <div class="node-wrap"><div class="connector"><div class="connector-line" id="conn-1"></div><div class="connector-arrow"></div></div></div>
+
+        <div class="node-wrap">
+          <div class="ai-boundary">
+            <div class="ai-boundary-line"></div>
+            <div class="ai-boundary-label">AI boundary</div>
+            <div class="ai-boundary-arrow"></div>
+          </div>
+        </div>
 
         <div class="node-wrap">
           <div class="node idle" id="node-healer" onclick="selectNode('healer')">
@@ -415,7 +487,8 @@
             <span class="node-icon">🩺</span>
             <div class="node-name">Healer</div>
             <div class="node-role">DB Lookup</div>
-            <div class="node-desc">Search depth + mismatch audit</div>
+            <div class="node-desc">Code-only HR record lookup — no LLM</div>
+            <div class="node-type-badge badge-code">⚙ Code Only</div>
             <div class="node-time" id="time-healer"></div>
           </div>
         </div>
@@ -427,7 +500,8 @@
             <span class="node-icon">⚖️</span>
             <div class="node-name">Critic</div>
             <div class="node-role">Compliance Guard</div>
-            <div class="node-desc">3-check jailbreak validation</div>
+            <div class="node-desc">Regex + rules engine — not AI</div>
+            <div class="node-type-badge badge-code">⚙ Rules Engine</div>
             <div class="node-time" id="time-critic"></div>
           </div>
         </div>
@@ -439,13 +513,21 @@
             <span class="node-icon">📨</span>
             <div class="node-name">Messenger</div>
             <div class="node-role">Action Card</div>
-            <div class="node-desc">Product-led output + routing</div>
+            <div class="node-desc">Threshold routing + card template</div>
+            <div class="node-type-badge badge-code">⚙ Logic</div>
             <div class="node-time" id="time-messenger"></div>
           </div>
         </div>
 
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="pipeline-legend">
+        <div class="legend-item"><div class="legend-dot-ai"></div> AI Agent — reads unstructured text, extracts fields, generates reasoning</div>
+        <div style="width:1px;height:12px;background:var(--border)"></div>
+        <div class="legend-item"><div class="legend-dot-code"></div> Deterministic Code — DB lookup, regex validation, threshold routing. LLM never touches financial fields.</div>
+      </div>
+
+      <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="progressFill"></div></div>
     </div>
 
     <!-- Bottom panels -->
@@ -844,6 +926,29 @@
   }
 
   // ── Node detail ────────────────────────────────────────────────────────────
+  const NODE_EXPLAINERS = {
+    parser: {
+      type: 'ai',
+      ai: 'Agent reads raw, unstructured carrier rejection text in any format. Scans for all candidate employee IDs and error codes, ranks them, selects the primary record, and retrieves the matching KB evidence. In production: Claude backbone.',
+      code: null,
+    },
+    healer: {
+      type: 'code',
+      ai: null,
+      code: 'Strictly a database lookup. The corrected value ALWAYS comes from the authoritative HR record — the LLM is never called. For non-fixable cases (malformed source data, expired windows), pre-flags to Critic rather than guessing.',
+    },
+    critic: {
+      type: 'code',
+      ai: null,
+      code: 'Three deterministic checks run in sequence: (1) format regex from standard_enr.json, (2) blocked sentinel value list, (3) numeric injection guard. All hardcoded rules. No AI inference. Any failure → confidence < 0.9 → HUMAN_REVIEW.',
+    },
+    messenger: {
+      type: 'code',
+      ai: null,
+      code: 'Threshold routing: confidence ≥ 0.9 → AUTO_FIXED card; < 0.9 → HUMAN_REVIEW card. Card text uses error-code-specific templates — not generated by the LLM. Human Review card inlines the full reasoning path from all 4 nodes.',
+    },
+  };
+
   function renderNodeDetail(name) {
     if (!pipelineData) {
       document.getElementById('nodeDetail').innerHTML = '<div class="placeholder">Run the pipeline first.</div>';
@@ -861,6 +966,26 @@
         <span class="detail-badge">Completed in ${step.duration_ms}ms</span>
       </div>
     </div>`;
+
+    // AI / Code explainer banner
+    const exp = NODE_EXPLAINERS[name];
+    if (exp) {
+      if (exp.type === 'ai') {
+        h += `<div class="ai-explainer">
+          <div class="explainer-col">
+            <div class="explainer-title ai-title">🤖 What the AI Agent Does</div>
+            <div class="explainer-body">${exp.ai}</div>
+          </div>
+        </div>`;
+      } else {
+        h += `<div class="ai-explainer">
+          <div class="explainer-col">
+            <div class="explainer-title code-title">⚙ Deterministic Code — No LLM</div>
+            <div class="explainer-body">${exp.code}</div>
+          </div>
+        </div>`;
+      }
+    }
 
     // Inputs
     h += `<div class="section-block"><div class="block-label">Inputs</div><table class="kv-table">`;
@@ -914,16 +1039,26 @@
   }
 
   function renderHealerOut(o) {
+    const corrected = o.corrected_value ?? null;
+    const src = o.source || 'internal_db.json';
     let h = `<table class="kv-table">
-      <tr><td>corrected_value</td><td><span class="val-green">${o.corrected_value ?? 'n/a'}</span></td></tr>
+      <tr><td>corrected_value</td><td><span class="val-green">${corrected ?? 'n/a (non-fixable)'}</span></td></tr>
       <tr><td>match_index</td><td>Record[${o.match_index}]</td></tr>
+      <tr><td>source</td><td style="font-family:monospace;font-size:9px;color:var(--green)">${src}</td></tr>
     </table>`;
+    if (corrected) {
+      h += `<div class="db-source-row">
+        <div class="db-source-label">Value source:</div>
+        <div class="db-source-pill">📂 ${src} → Record[${o.match_index}]</div>
+        <div class="db-source-label" style="color:#a78bfa;font-size:9px">← not AI-generated</div>
+      </div>`;
+    }
     if (o.mismatch_log) {
       h += `<div style="margin-top:8px"><div class="block-label">Mismatch Log</div>
         <div class="reasoning-box">${o.mismatch_log}</div></div>`;
     }
     if (o.search_depth?.length) {
-      h += `<div style="margin-top:8px"><div class="block-label">Search Depth</div>`;
+      h += `<div style="margin-top:8px"><div class="block-label">Search Depth — every record scanned</div>`;
       o.search_depth.forEach(row => {
         const match = row.includes('MATCH');
         h += `<div class="check-row">
@@ -939,20 +1074,23 @@
     const pct = Math.round((o.confidence_score || 0) * 100);
     const cls = o.valid ? 'high' : 'low';
     let h = `<table class="kv-table">
-      <tr><td>pattern</td><td style="font-family:monospace">${o.pattern_tested}</td></tr>
+      <tr><td>pattern</td><td style="font-family:monospace;font-size:9px">${o.pattern_tested}</td></tr>
       <tr><td>checks</td><td>${o.checks_passed}/${o.checks_total}</td></tr>
       <tr><td>confidence</td><td>${pct}%
         <div class="confidence-bar"><div class="confidence-fill ${cls}" style="width:${pct}%"></div></div></td></tr>
     </table>`;
     if (o.validation_log?.length) {
-      h += `<div style="margin-top:8px"><div class="block-label">Validation Log</div>`;
-      o.validation_log.forEach(entry => {
+      const checkTypes = ['Format regex (standard_enr.json)', 'Jailbreak guard (blocked sentinel list)', 'Injection guard (type check)'];
+      h += `<div style="margin-top:8px">
+        <div class="rules-engine-header">Deterministic Rules Engine — 3 hardcoded checks</div>`;
+      o.validation_log.forEach((entry, i) => {
         const pass = entry.includes('→ PASS');
         const skip = entry.includes('Skipped') || entry.includes('skipping') || entry.includes('Pre-flagged');
         const icon = skip ? '—' : (pass ? '✓' : '✗');
-        const cls = skip ? 'check-skip' : (pass ? 'check-pass' : 'check-fail');
-        h += `<div class="check-row"><span class="${cls}">${icon}</span>
-          <span style="font-size:10px;color:var(--muted)">${entry}</span></div>`;
+        const badgeCls = skip ? 'check-skip' : (pass ? 'check-pass' : 'check-fail');
+        const checkLabel = checkTypes[i] ? `<span style="color:var(--muted);font-size:8px;margin-left:4px">[${checkTypes[i]}]</span>` : '';
+        h += `<div class="check-row"><span class="${badgeCls}">${icon}</span>
+          <span style="font-size:10px;color:var(--muted)">${entry}</span>${checkLabel}</div>`;
       });
       h += `</div>`;
     }
