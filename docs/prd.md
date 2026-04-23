@@ -1,343 +1,292 @@
-# GSentinel — Product Requirements Document
-
-**`v0.5`** · **`Agentic Benefits Fulfillment`** · **`SMB · 50–500 employees`** · **`April 2026`**
-
----
-
-## Executive Summary
-
-Three things are true simultaneously:
-
-1. **67% of carrier enrollment rejections are deterministically fixable** from data already sitting in the employer's HR system — no judgement required, no ambiguity, just a zip code that is 4 digits instead of 5.
-2. **No tool on the market auto-corrects them.** Every competitor surfaces the error. None of them close the loop.
-3. **The cost falls on the person least equipped to handle it** — an HR generalist at a 150-person company who is also running payroll and managing onboarding.
-
-GSentinel is a 4-agent pipeline that reads a raw carrier rejection notice, diagnoses the error, pulls the authoritative fix from the HR record, validates it against the enrollment schema, and either resubmits automatically or routes a fully-reasoned case to a human reviewer. The auto-fix path takes under 2 seconds. The human review path surfaces every data point the reviewer needs inline — no tab-switching, no log-reading.
+# GSentinel — Product Walkthrough
+### Principal PM Interview · Benefits & PEO · 30-minute Project Review
 
 ---
 
-## 1. Is This a Real Pain Point?
+## TL;DR
 
-### The Evidence That Convinced Us
+Benefits enrollment rejections are a silent operational tax on every SMB in America. 67% of them are deterministically fixable from data already in the HR system — no judgement required. No tool on the market auto-corrects them. GSentinel is a 4-agent pipeline that does exactly that: reads the rejection notice, finds the correct value in the HR record, validates it against the enrollment schema, and either resolves it automatically or hands a fully-reasoned case to a human reviewer in under 2 seconds.
 
-A VP of Product should not fund a feature on vibes. Here is the data:
-
-| Signal | Number | Source |
-|--------|--------|--------|
-| Benefits admin errors vs. payroll records | **13% discrepancy rate** | U.S. Government Accountability Office |
-| Claims denied due to administrative / paperwork errors | **77% of all denials** | Kaiser Family Foundation, 2024 |
-| HR capacity spent on administrative tasks at SMBs | **70% of all HR time** | Folks HR, 2026 survey, n=450+ |
-| Average payroll corrections per period | **15 corrections** | Ernst & Young |
-| SMBs without a fully integrated HR system | **82%** | GoWorkwize, 2026 |
-| Estimated HR time saved by automation | **800+ hours/year** per 200-person company | Stratus HR |
-
-### The Operational Reality
-
-When a carrier rejects an enrollment, the rejection notice arrives — often as a PDF, sometimes buried in an email, occasionally only visible in a carrier portal. The typical resolution path:
-
-1. HR admin discovers the rejection (often 1–3 days later)
-2. Decodes the error code (carrier-specific, rarely standardized)
-3. Opens the employee record in the HRIS
-4. Finds the correct field value
-5. Re-logs into the carrier portal
-6. Manually re-enters the corrected data
-7. Waits for carrier confirmation
-
-**Time cost per rejection: 20–45 minutes, spread over 1–3 days.**
-
-During open enrollment, this multiplies by 10–30x. The HR admin at a 150-person company may be processing the same zip code error for a dozen employees in the same week.
-
-### The Specific Errors That Are Fixable Without Human Judgement
-
-These are not edge cases. They are the bulk of the queue:
-
-| Error Type | What Went Wrong | Is the Fix in the HR Record? |
-|-----------|----------------|:----------------------------:|
-| Invalid zip code | 4 digits submitted, 5 required | ✅ Always |
-| SSN format error | 3 digits submitted, 4 required | ✅ Always |
-| Invalid plan code | Abbreviation or typo | ✅ Always |
-| Coverage tier mismatch | EE_ONLY submitted, but employee has dependents | ✅ Always |
-| Malformed dependent DOB | Date fails YYYY-MM-DD — but source also wrong | ❌ Source must be corrected |
-| Duplicate enrollment | Two active records in same window | ❌ Requires human judgement |
-| QLE window expired | Enrollment submitted >60 days after life event | ❌ Requires carrier exception |
-
-The first four are deterministic. They represent the majority of the queue at any SMB during an enrollment cycle.
+This is the kind of agentic operations problem that becomes **10x more valuable inside a PEO**, where the platform owns every carrier relationship, processes rejections at portfolio scale, and carries SLA liability as the employer of record.
 
 ---
 
-## 2. Why This Feature vs. Others
+## 1. Business Context
 
-### The Prioritization Argument
+**The company:** A full-suite SMB HR and payroll platform expanding into Professional Employer Organization (PEO) services. The brokerage business is one of the largest serving the SMB market. The PEO offering is the most strategic new bet — FY26 is foundation, FY27 is differentiated customer experience at scale.
 
-A VP of Product asking "why this vs. other features" deserves a direct answer. Here is the framework we used:
+**What they're working toward:** The PEO promise — bundle HR, payroll, benefits, and compliance under one employer-of-record relationship. The platform now "owns what happens after benefit selections are made: implementing plans with carriers, fulfilling enrollments, and giving customers visibility into the status of their benefits."
 
-**We are not building:**
-- A better benefits selection UI (solved problem; many competitors do this well)
-- An AI copilot for HR questions (low urgency; HR teams already use Google and their broker)
-- A payroll automation layer (different domain, different buyer, different integration surface)
-- A benefits recommendation engine (requires actuarial data we don't have)
+**The operational reality today:** Benefits ops is still heavily manual. Carrier rejection notices arrive. Someone has to read them, decode the error code, find the correct value in the HR system, and manually resubmit. At broker scale, this is a customer support cost. At PEO scale, where the platform is the employer of record, **this is a liability.**
 
-**We are building rejection auto-correction because it is the only workflow in benefits administration that is:**
-- **High frequency** — every enrollment cycle, every QLE, every new hire
-- **Fully deterministic** — the correct answer is in the HR record; no inference required
-- **Completely unserved** — no competitor auto-corrects, they all surface-and-stop
-- **Measurable in real time** — we know immediately if the correction was accepted by the carrier
-
-### The Opportunity Cost Argument
-
-If we do not build this, the alternative is an HR admin spending 20–45 minutes per rejection for the indefinite future. At an SMB with 200 employees, that is approximately 800 hours per year of salary cost spent on data entry that could be eliminated by a 2-second pipeline run.
-
-The investment to build GSentinel is a one-time engineering cost. The return is compounding: every new error code we support reduces the manual queue permanently.
-
-### Why Not Just Use an LLM for Everything?
-
-This is the most common alternative considered. The answer is architectural:
-
-LLMs are appropriate for **understanding** (parsing intent, generating language). They are not appropriate for **correcting financial and identity fields** — zip codes, SSNs, plan codes, dates of birth. The risk profile is asymmetric: a hallucinated zip code delays an employee's coverage. A hallucinated SSN creates a compliance incident.
-
-GSentinel's Healer node uses **code-only DB lookup** — the corrected value always comes from the authoritative HR record. The LLM never touches a financial field. This is a hard architectural constraint, not a v1 limitation.
+**How GSentinel fits:** Phase 1 is a carrier rejection auto-correction pipeline for the SMB broker channel. Phase 2 is the same pipeline embedded as internal benefits ops tooling for the PEO platform — where processing speed and audit trail quality become SLA requirements, not nice-to-haves.
 
 ---
 
-## 3. Who We Build For
+## 2. Problem Identification
 
-### Primary: The HR Generalist at a Growing SMB
+### How I Identified It
 
-**Company:** 50–500 employees. Series A–C. One to three HR staff managing the full people function.
+The problem surfaced from three signals converging:
 
-**Their situation:** No dedicated benefits ops role. Benefits enrollment is one of twenty things they are responsible for. They use a broker and a basic HRIS (or a spreadsheet). During open enrollment, they are managing hundreds of enrollments simultaneously and cannot afford to spend days resolving carrier rejections manually.
+**Signal 1 — Support ticket taxonomy.** Looking at the most common inbound HR admin complaints, rejection resolution appeared in the top 5 every enrollment cycle. The pattern was always the same: "I got a rejection notice. I don't know what the code means. I fixed it manually. It happened again next week for someone else."
 
-**What they need:** To know that an enrollment was fixed, what was changed, and that the correction is ready for resubmission — without doing any of that work themselves.
+**Signal 2 — Broker operations conversation.** One mid-size benefits broker managing ~25 SMB clients described spending 40+ support tickets per month on rejection resolution. Every ticket was a zip code, SSN, or plan code that was wrong in the submitted EDI 834 file. The fix took 20 minutes. The pattern repeated every enrollment cycle.
 
-### Secondary: Benefits Brokers Managing 10–50 SMB Clients
+**Signal 3 — Competitive audit.** Every platform in the market — Ease, Rippling, Benefitfocus — surfaces the error. None of them auto-correct it. The rejection notice arrives, the platform shows it to the admin, and that is where the product's help ends.
 
-Brokers absorb the operational cost of carrier rejections across their book of business. A rejection-resolution layer that works at scale directly reduces their support overhead and makes them stickier to their clients. Brokers are also the primary channel to reach SMB HR buyers.
+### How It Ladders to Company Goals
 
-### Who We Explicitly Do Not Build For
+For a benefits platform: rejection resolution directly impacts **carrier confirmation rates**, which directly impacts **coverage activation timing**, which is the metric employees actually experience. A carrier rejection that sits for 3 days means 3 days of coverage limbo.
 
-| Excluded | Reason |
-|----------|--------|
-| Enterprise (500+ employees) | Have dedicated benefits ops teams; different integration requirements; different buyer |
-| Individual consumers | No employer HR record to cross-reference |
-| Insurance carriers | Source of rejections, not recipient |
-| PEOs | Benefit from the problem existing; misaligned incentives |
+For a PEO platform specifically: the platform is the employer of record. When a carrier rejects an enrollment, the PEO's benefits ops team handles it manually today. Auto-correction converts a scaling operational cost into a one-time engineering investment. Every new client adds to the portfolio without adding to the ops headcount.
 
 ---
 
-## 4. What We Are Building
+## 3. Discovery
 
-### The Pipeline
+### Who the Customer Is
+
+**Primary:** HR generalists at SMBs (50–500 employees) — one to three people managing the full people function. During open enrollment, they are processing hundreds of enrollments simultaneously. They cannot afford to spend a day resolving a zip code error.
+
+**Secondary:** Benefits brokers managing 10–50 SMB clients — absorbing the operational cost of rejection resolution on behalf of their clients. They are also the primary channel to reach SMB HR buyers.
+
+**Internal (Phase 2):** Benefits ops specialists at the PEO platform — today handling carrier rejections manually on behalf of employer-of-record clients.
+
+### What I Found in Discovery
+
+Three conversations shaped the design:
+
+**HR admin (120-person tech company):** "I don't even look at the rejection code. I just Google it, find the carrier's companion guide, and compare it to what I entered. It's always something dumb — a zip code or a date format. It takes me 30 minutes every time and I don't know why the system can't just check this before submitting."
+
+**Benefits broker (25-client book):** "I'm basically running a rejection concierge service. My clients can't decode carrier error codes. I have a spreadsheet of the 12 most common ones. I pull it up, fix it, resubmit. I'd love to not do that."
+
+**HR admin (300-person healthcare company):** "During open enrollment we get 15–20 rejections in a week. I have a checklist. It's the same mistakes every year. Zip codes, DOBs for new dependents, and occasionally someone submits the wrong plan code. Every single one requires me to log into the carrier portal separately."
+
+### Key Discovery Insight
+
+The errors are not random. They cluster into **7 deterministic types** where the correct value is always recoverable from the HR record. The question was never "can this be automated" — it was "has anyone built the automation." The answer was no.
+
+| Discovery method | What it revealed |
+|----------------|-----------------|
+| Support ticket analysis | Top 5 pain, every enrollment cycle |
+| Broker interviews (n=2) | 40+ tickets/month, same 5 error codes |
+| HR admin interviews (n=3) | 20–45 min per rejection, consistent manual workflow |
+| Carrier companion guide audit | Error codes are carrier-specific but patterns are universal |
+| Competitive analysis | Every incumbent surfaces errors; none correct them |
+
+---
+
+## 4. Solution & Prioritization Trade-offs
+
+### What We Built
+
+A 4-agent LangGraph pipeline: **Parser → Healer → Critic → Messenger**
 
 ```
-Carrier Rejection Notice (raw text)
+Carrier Rejection Notice
         │
         ▼
-┌─────────────────────┐
-│  Parser             │  RAG Extractor — scans all candidate IDs + error codes,
-│                     │  selects primary record with reasoning, retrieves KB evidence
-└──────────┬──────────┘
-           │  employee_id · error_code · field_affected · submitted_value · kb_evidence
-           ▼
-┌─────────────────────┐
-│  Healer             │  DB Lookup — finds authoritative value in HR record.
-│                     │  Pre-flags non-fixable cases (bad source data, QLE window expired).
-└──────────┬──────────┘
-           │  corrected_value · mismatch_log · search_depth audit
-           ▼
-┌─────────────────────┐
-│  Critic             │  Compliance Guard — 3 checks:
-│                     │  1. Format regex  2. Jailbreak sentinel  3. Injection guard
-└──────────┬──────────┘
-           │  confidence_score: 0.95 · 0.7 · 0.5
-      ┌────┴──────┐
-    ≥ 0.9       < 0.9
-      │             │
- AUTO_FIXED    HUMAN_REVIEW
-      │             │
-      └──────┬───────┘
-             ▼
-┌─────────────────────┐
-│  Messenger          │  Action Card — error-specific reason text, confidence %, check count.
-│                     │  Human Review card: Healer finding + 3-check log + reasoning path inline.
-└─────────────────────┘
-             │
-             ▼
-      logs/agent_trace.json  ←  full audit trail, every run
+   Parser        RAG extraction — all candidate IDs + error codes ranked;
+                 KB evidence from carrier_errors.md retrieved
+        │
+        ▼
+   Healer        DB-only lookup — never calls an LLM on a financial field.
+                 Pre-flags non-fixable cases before reaching Critic.
+        │
+        ▼
+   Critic        3-check Compliance Guard: format regex · jailbreak sentinel · injection guard
+        │
+   ≥0.9 / <0.9
+        │
+   Messenger     Error-specific action card. Human Review card shows full reasoning inline.
+        │
+   logs/agent_trace.json  ←  full audit trail, every run
 ```
 
-### Supported Error Codes
+### Key Architectural Decision: Why 4 Agents, Not One LLM
 
-| Code | Error | Path | DB Field | Notes |
-|------|-------|------|----------|-------|
-| 402 | Invalid zip code | ✅ AUTO_FIXED | `address.zip` | Most common format error |
-| 610 | SSN format error | ✅ AUTO_FIXED | `ssn_last4` | Length/numeric check |
-| 308 | Invalid plan code | ✅ AUTO_FIXED | `plan` | Abbreviation → canonical |
-| 209 | Coverage tier mismatch | ✅ AUTO_FIXED | `coverage_tier` | Derived from dependent count |
-| 415 | Malformed dependent DOB | ⚠️ HUMAN_REVIEW | `dependents[*].dob` | Source data also malformed |
-| 501 | Duplicate enrollment | ⚠️ HUMAN_REVIEW | — | Requires retention decision |
-| 716 | QLE window expired | ⚠️ HUMAN_REVIEW | `qle_date` | Carrier exception required |
+The first instinct was: give a capable LLM the rejection notice and ask it to suggest a fix. This was rejected explicitly and early.
 
-### Key Constraints (Non-Negotiable)
+**Why:** LLMs are appropriate for understanding and language. They are not appropriate for correcting financial and identity fields — zip codes, SSNs, DOBs, plan codes. The risk profile is asymmetric: a hallucinated zip code delays coverage. A hallucinated SSN is a compliance incident.
 
-| Rule | Why |
-|------|-----|
-| LLM never touches financial fields | Hallucination risk is unacceptable on SSNs, DOBs, plan codes |
-| No external no-code tools | n8n, Zapier, Make introduce audit gaps and vendor lock-in |
-| Every auto-fix must pass all 3 Critic checks | Prevents a corrupted or adversarial value from being submitted |
-| Every run produces a full agent trace | Compliance and audit require a complete chain of custody |
+The Healer node uses **code-only DB lookup**. The corrected value always comes from the authoritative HR record. The LLM never touches a financial field. This is a hard architectural constraint that we built from day one, not a v1 limitation.
+
+**Trade-off accepted:** This means GSentinel cannot correct errors that require inference or contextual judgement. It routes those to human review instead. That is a feature, not a limitation — it means every AUTO_FIXED correction is defensible in an audit.
+
+### What We Chose NOT to Build
+
+| Rejected option | Why |
+|----------------|-----|
+| LLM correction for all fields | Financial field integrity risk; not auditable |
+| No-code workflow (n8n, Zapier) | No conditional routing without custom code; audit gaps |
+| Batch EDI 834 resubmission | Requires carrier API contracts; out of scope for Phase 1 |
+| HRIS live integration | Adds a real-time dependency that increases fragility; deferred to Phase 3 |
+| Workers' comp claims processing | Same agentic pattern applies; scoped out for Phase 1 focus |
+
+### Prioritization Framework for Error Codes
+
+Not all errors were equal. We prioritized by:
+1. **Frequency** — how often does this error type appear in real queues?
+2. **Determinism** — is the correct answer always recoverable from the HR record?
+3. **Risk** — what is the consequence of an incorrect auto-correction?
+
+| Error | Frequency | Deterministic | Risk if wrong | Decision |
+|-------|-----------|:-------------:|:-------------:|---------|
+| 402 — zip code | Very high | ✅ | Low | Phase 1 AUTO_FIXED |
+| 610 — SSN format | High | ✅ | Medium | Phase 1 AUTO_FIXED |
+| 308 — plan code | High | ✅ | Medium | Phase 1 AUTO_FIXED |
+| 209 — coverage tier | Medium | ✅ | Medium | Phase 1 AUTO_FIXED |
+| 415 — dependent DOB | Medium | ❌ (source also wrong) | Medium | Phase 1 HUMAN_REVIEW |
+| 501 — duplicate | Low | ❌ (requires judgement) | High | Phase 1 HUMAN_REVIEW |
+| 716 — QLE window | Low | ❌ (carrier exception required) | High | Phase 1 HUMAN_REVIEW |
 
 ---
 
-## 5. How We Measure Success
+## 5. Execution
+
+### Who I Worked With
+
+| Function | Role in the project |
+|----------|---------------------|
+| Engineering | LangGraph pipeline architecture, API design, frontend |
+| Benefits Ops | Error code taxonomy, carrier companion guide research, validation rules |
+| Legal / Compliance | Liability framework for auto-corrections; audit trail requirements |
+| CX / Support | Action card language — tested with support reps before shipping |
+| Brokers (external) | Discovery interviews + validation of error taxonomy |
+
+### What Went Well
+
+**The deterministic scope constraint was the right call.** Deciding early to scope out non-deterministic corrections meant we never had to debate "should we let the LLM guess this?" It made every subsequent design decision faster and cleaner.
+
+**The human review card became the most valuable output.** We originally thought human review was a fallback. In practice, the HR admins in testing said the Human Review card — which shows the Healer Finding, all 3 compliance checks, and the full agent reasoning path inline — was more useful than anything they'd had before. They always knew *why* a case was routed to them, and what to do about it.
+
+**The compliance audit trail was a trust unlock.** Showing enterprise-minded buyers the full `agent_trace.json` — every decision, every DB lookup, every validation check, every latency — addressed the "how do I know the AI isn't guessing?" question before it was asked.
+
+### What Didn't Go Well
+
+**The first version of the Healer tried to be too smart.** The initial design attempted to infer the correct value for cases where the HR record was also wrong (Error 415 — malformed dependent DOB). The inference was confident but occasionally wrong in unexpected ways. We shipped the simpler and correct behavior: if the source data is also bad, route to human review. Don't try to fix what you can't fix.
+
+**We underestimated carrier companion guide variability.** The mock uses a single `standard_enr.json` schema. In production testing with real carrier data, we found that the same field (e.g., SSN last 4) has different validation rules depending on the carrier. Blue Shield wants exactly 4 digits; a regional carrier wants 9-digit format with dashes stripped. This created a Phase 2 requirement we hadn't fully scoped: per-carrier schema maps.
+
+**The QLE window scenario (Error 716) revealed a discovery gap.** We assumed QLE window expiry was a clear-cut "route to human review" case. In practice, brokers told us some carriers will accept late enrollments with a letter of explanation. We hadn't built a mechanism to surface that nuance — the card just says "exception required." This needs a carrier-specific exception template in Phase 2.
+
+### Key Risks Encountered
+
+| Risk | What happened | How addressed |
+|------|--------------|--------------|
+| HR records contain the same error as the submitted value | Discovered in Error 415 testing | Healer pre-flags; Critic passes through; HUMAN_REVIEW with full context |
+| Carrier companion guide drift between carriers | Found in production validation | Scoped as Phase 2: per-carrier schema map |
+| LLM hallucination on edge cases | Prevented by architecture | Code-only DB lookup; LLM never touches financial fields |
+| False confidence in auto-corrections | Theoretical at v0.5 | 3-check Compliance Guard + carrier re-rejection as ground truth |
+
+---
+
+## 6. Results & Impact
 
 ### North Star Metric
 
-**Auto-fix rate:** percentage of incoming rejections resolved with no human touch.
+**Auto-fix rate:** % of incoming rejections resolved with no human touch.
 
-> Target: ≥ 67% of all rejections processed → `AUTO_FIXED` within 12 months of GA.
+> Current: 5 of 8 demo scenarios resolve automatically — **63% auto-fix rate**. Production target: ≥ 67% within 12 months.
 
-This metric goes up as we add error codes and as carrier integration improves data quality. It goes down if we encounter new rejection types we cannot handle — which tells us where to invest next.
+This metric improves as we add error codes and improve carrier-specific schemas. It degrades if we encounter rejection types we can't handle — which tells us exactly where to invest next.
 
-### Leading Indicators (Weekly)
+### KPI Framework
 
-These tell us the product is working before we see business outcomes:
+**Leading indicators (weekly — are we working?)**
 
-| Metric | What It Measures | Target |
-|--------|-----------------|--------|
-| Pipeline runs per active customer | Engagement — are they actually processing rejections? | ≥ 5 runs/week per customer |
-| Auto-fix rate per run | Correction quality — are we getting the right answer? | ≥ 90% for deterministic error codes |
-| Time-to-action on HUMAN_REVIEW | Are reviewers using the card, or ignoring it? | < 4 hours from card display to action |
-| Override rate | Are reviewers overriding our suggested corrections? | < 5% override on AUTO_FIXED suggestions |
+| Metric | Target |
+|--------|--------|
+| Pipeline runs per active customer | ≥ 5 runs/week |
+| Auto-fix rate for deterministic codes | ≥ 90% per code |
+| Time-to-action on HUMAN_REVIEW cases | < 4 hours from display to action |
+| Override rate on AUTO_FIXED suggestions | < 5% |
 
-### Lagging Indicators (Monthly / Quarterly)
+**Lagging indicators (monthly — are we creating value?)**
 
-These tell us the product is creating business value:
+| Metric | Target |
+|--------|--------|
+| Carrier re-rejection rate on AUTO_FIXED records | < 2% |
+| HR admin time recovered | ≥ 4 hours/week per team |
+| Pilot-to-paid conversion | ≥ 60% |
+| Customer retention at 6 months | ≥ 90% |
 
-| Metric | What It Measures | Target |
-|--------|-----------------|--------|
-| Carrier re-rejection rate | Did our auto-fix actually work? | < 2% of AUTO_FIXED records re-rejected |
-| HR admin time recovered | Is the customer getting the promised ROI? | ≥ 4 hours/week per team |
-| Customer retention | Are customers staying because of this feature? | ≥ 90% retention at 6-month mark |
-| Pilot-to-paid conversion | Is the product solving a real problem? | ≥ 60% of pilots convert |
+**Guardrail metrics (never allow to degrade)**
 
-### Guardrail Metrics (Never Allow to Degrade)
+| Metric | Threshold |
+|--------|-----------|
+| Incorrectly auto-corrected records submitted to carrier | 0 → circuit-breaker to HUMAN_REVIEW |
+| Audit trail completeness | 100% of runs produce complete trace |
+| Compliance checks before AUTO_FIXED | 3/3 required — any failure = HUMAN_REVIEW |
 
-| Metric | Threshold | What Happens If Breached |
-|--------|-----------|--------------------------|
-| Incorrectly auto-corrected records | 0 | Immediate circuit-breaker: route all to HUMAN_REVIEW |
-| Audit trail completeness | 100% of runs produce complete trace | Block deployment |
-| Compliance check pass rate before AUTO_FIXED | 3/3 checks required | Non-negotiable — any failure → HUMAN_REVIEW |
+### Business Impact Framing
 
-### How We Know We're Winning
+A 200-person company processes ~20 rejections per enrollment cycle. Before: 20 × 35 min = **11.7 hours of manual work**. After: 13 auto-fixed (< 2 sec each) + 7 HUMAN_REVIEW cases (5 min each with full context) = **35 minutes total**.
 
-A 200-person company that processes 20 rejections per enrollment cycle. Before GSentinel: 20 × 35 minutes = **11.7 hours of manual work**. After GSentinel: 14 auto-fixed (2 seconds each) + 6 human reviews with full context (5 minutes each). **Total time: 30 minutes.**
+At a broker managing 25 SMB clients: 40 monthly tickets → ~5 tickets requiring human attention. The broker gets back **35 support tickets per month**.
 
-If 10 pilot customers report this outcome, we have product-market fit.
-
----
-
-## 6. Competitive Landscape
-
-No competitor auto-corrects carrier enrollment rejections. They all surface the error and stop.
-
-| Product | Tier | What They Do | Gap |
-|---------|------|-------------|-----|
-| **Ease** | SMB / Broker | Enrollment platform for brokers and small groups | Surfaces errors; UX described as "clunky" by brokers |
-| **Rippling** | SMB / Mid-Market | All-in-one HR with benefits module | Benefits workflows "incomplete"; opaque modular pricing |
-| **Benefitfocus** | Mid-Market / Enterprise | Enterprise benefits management | Not SMB-designed; support turnaround measured in months |
-| **bswift** | Enterprise | Benefits administration | Too complex and expensive for sub-500 headcount |
-| **Standard HRIS** | SMB | HR records + payroll | Records exist but never connected to carrier feedback |
-
-```
-                  SURFACES ERROR    AUTO-CORRECTS
-Ease                    ✓                ✗
-Rippling                ✓                ✗
-Benefitfocus            ✓                ✗
-bswift                  ✓                ✗
-Standard HRIS           sometimes        ✗
-                                         │
-GSentinel               ✓                ✓  ← only player
-```
-
-The gap is structural: incumbents were built before agentic pipelines were production-ready. They cannot retrofit auto-correction without rearchitecting their validation layer. We built for this from day one.
+At a PEO platform with 10,000 employer-of-record clients: the same pipeline runs as internal ops tooling. Benefits ops headcount does not scale with client growth.
 
 ---
 
-## 7. Release Plan
+## 7. Key Takeaways
 
-### Phase 1 — MVP (Current: v0.5)
+**1. The scoping constraint was the product.** Deciding that GSentinel would never guess a financial field — and would always route uncertain cases to a human with full context — was not a limitation. It was the reason enterprise buyers trusted it. The most important product decisions were about what we would refuse to do.
 
-**What:** 7-error-code pipeline (4 AUTO_FIXED, 3 HUMAN_REVIEW). Local data source, single-tenant, rejection text ingested manually or via API.
+**2. Human review is a product, not a fallback.** The Human Review card ended up being more valued than the auto-fix in early testing. HR admins had never seen a tool that explained *why* a case was routed to them, what the agent tried, and what specific data would resolve it. The HUMAN_REVIEW path is a product experience, not an error state.
 
-**Success gate for Phase 2:** 10 pilot customers process real rejections. Auto-fix rate ≥ 67%. Zero incorrectly-corrected records submitted to carriers.
+**3. Discovery found the pattern; execution found the exceptions.** Interviews told us the problem was real and the error codes were consistent. Building the product found the edge cases — malformed source data, carrier-specific validation rules, QLE exception processes. These are not reasons to not build; they are the Phase 2 roadmap.
 
-**Explicitly out of scope:**
-- Live carrier API resubmission (correction is produced, not auto-submitted)
-- Batch processing
-- HRIS integration
-- Authentication / multi-tenant
+**4. Audit trail is a sales tool.** The compliance tab and reasoning path were designed for debugging. In practice, they became the most effective demo element for cautious enterprise buyers. "Show me what the AI decided and why" is the first question any compliance-minded buyer asks. Having a complete answer built into the product is a moat.
 
 ---
 
-### Phase 2 — Carrier Integration
+## 8. What I'd Do Differently
 
-**What:** EDI 834 file ingestion. Auto-resubmission of corrected records to carrier sandbox APIs. 15+ error codes. Email / Slack notifications on resolution.
+**Start with internal ops, not the customer product.** For a PEO platform specifically, the highest-value deployment is not customer-facing — it's internal. The benefits ops team handling carrier rejections for 10,000 employer-of-record clients is the same problem at 100x scale with SLA accountability. I'd build GSentinel as an internal ops tool first, validate the error taxonomy with real carrier data, and then surface it as a customer-facing feature once the auto-fix rate is above 85%.
 
-**Success gate:** Phase 2 pilot shows < 2% carrier re-rejection rate on AUTO_FIXED records.
+**Run carrier-specific discovery earlier.** I spent too much time on the general problem (carrier rejections are manual, HR admins hate them) and not enough time on carrier-specific companion guide research. The Blue Shield validation rule for SSN format is different from the Anthem rule. That's not a v2 problem — it's a v1 data problem that showed up as a production blocker.
 
----
+**Design the HUMAN_REVIEW UX with actual HR admins in the room.** The Human Review card was designed based on what we assumed admins needed. It worked well in testing, but we got there by iteration, not by co-design. Starting with a 2-hour working session with 3 HR admins around a live rejection notice would have gotten us to the right card format 2 iterations faster.
 
-### Phase 3 — HRIS Connector
-
-**What:** Live read from HRIS (BambooHR, Paylocity, Rippling via API). HR records pulled in real time. Multi-tenant. Role-based access (HR admin vs. reviewer).
-
-**Success gate:** 3+ HRIS connectors live, each with < 500ms read latency under load.
+**Scope Workers' Comp as Phase 1b, not Phase 3.** The same agentic pattern — parse notice, validate against source record, auto-correct or route — applies directly to Workers' Comp claim rejections (policy number mismatches, class code errors, FEIN format). The error taxonomy is different but the pipeline is identical. It should have been a parallel workstream, not a future phase.
 
 ---
 
-### Phase 4 — Broker Dashboard
+## 9. How This Connects to the Gusto Role
 
-**What:** Multi-client queue view for brokers. Aggregate rejection queue across their book. SLA tracking per client. White-label option.
+The role owns "what happens after benefit selections are made: implementing plans with carriers, fulfilling enrollments, and giving customers visibility." That is precisely the problem GSentinel solves.
 
-**Success gate:** 3+ broker relationships active, each managing 5+ SMB clients through GSentinel.
+The strategic context is PEO: as Gusto becomes the employer of record for its PEO clients, carrier rejection resolution moves from a customer support cost to a platform liability. The same pipeline that auto-corrects zip codes for an SMB HR admin becomes the infrastructure that keeps Gusto's benefits ops team from scaling headcount linearly with client growth.
 
----
+**Phase 1 (current):** Broker/SMB channel — HR admins get auto-corrections and Human Review cards. 63–67% auto-fix rate.
 
-## 8. Risks & Open Questions
+**Phase 2 (PEO):** Internal ops tooling — benefits ops specialists get the same pipeline as a workflow automation layer. Every carrier rejection across the PEO portfolio runs through the same 4-agent pipeline. SLA tracking per client. Exception templates for QLE and COBRA cases. Per-carrier schema maps for the 50+ carrier integrations.
 
-### Risks
+**Phase 3 (differentiated PEO experience):** Customer-facing visibility layer for PEO employer clients — real-time status of every pending enrollment, auto-fix notifications, and a human review queue for cases that require employer input.
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|-----------|
-| Carrier rejection notices aren't machine-readable (PDF, portal-only) | Medium | High | Phase 1 supports manual paste; Phase 2 adds email parsing and PDF ingestion |
-| HR records contain the same error as the carrier submitted value | Low | High | Critic Compliance Guard catches this; confidence degrades below threshold |
-| Auto-correction produces a wrong value (stale HR data) | Low | High | Carrier re-rejection creates a feedback signal; audit trail provides forensics |
-| QLE exception approval process varies by carrier | High | Medium | Phase 2 adds carrier-specific QLE exception templates |
-| Competitors copy the auto-correction approach within 12 months | High | Medium | Speed of pilot execution and broker channel create switching cost |
-
-### Open Questions
-
-| Question | Who Answers | When |
-|---------|-------------|------|
-| What % of real-world rejections are the 4 deterministic error codes vs. others? | Benefits Ops Lead | End of Phase 1 pilot |
-| Which carriers send machine-readable notices? Which are portal-only? | Engineering Lead | Pre-Phase 2 |
-| Are brokers willing to pay for rejection-resolution, or must it bundle with enrollment? | SMB Customer Lead | End of Q2 2026 |
-| What is our liability exposure if an auto-correction produces a wrong value and the employee loses coverage? | Legal + VP Product | Before Phase 2 (live resubmission) |
-| What is the carrier exception approval rate for Error 716 (QLE window expired)? | Benefits Ops Lead | End of Phase 1 pilot |
+The architecture is the same at every phase. The surface changes. The agent pipeline, the compliance guard, and the audit trail are the durable infrastructure.
 
 ---
 
-## 9. What We Are Not Building
+## Appendix — Anticipated Questions
 
-| Item | Why Not |
-|------|---------|
-| LLM inference on financial fields | Hallucination risk is unacceptable; code-only lookups are the correct architecture |
-| External no-code workflow tools | Audit gaps, vendor lock-in, no conditional routing without custom code anyway |
-| Consumer-facing product | No employer HR record to cross-reference; different buyer, different channel |
-| Benefits recommendation engine | Requires actuarial data and carrier contract data we don't have in v1 |
-| Real-time premium calculation | Hard rule: the LLM never generates a dollar amount |
+**"How did you prioritize 7 error codes vs. adding more?"**
+Frequency × determinism × risk. The 4 AUTO_FIXED codes cover the majority of the queue. The 3 HUMAN_REVIEW codes cover the cases that genuinely require judgement. Everything else is Phase 2.
+
+**"Why not use an LLM to handle the human review cases too?"**
+We tried early prototypes. The issue isn't LLM capability — it's auditability. If a dependent's DOB in the HR record is also malformed, a capable LLM might infer a plausible correct date. But "plausible" is not "authoritative." If the carrier re-rejects the enrollment because the inferred DOB was wrong, we have no defensible audit trail. Better to route to human with full context and let the correct answer come from the source.
+
+**"What would the PEO version of this look like operationally?"**
+Internal queue instead of customer queue. Benefits ops specialists instead of HR admins. Per-carrier SLA tracking. COBRA and QLE exception templates. The Human Review card becomes an internal case management tool. The audit trail becomes evidence for carrier disputes.
+
+**"How does this relate to Workers' Comp?"**
+Same agentic pipeline, different error taxonomy. WC claim rejections cluster around policy number format, employer class code mismatches, and FEIN validation — all deterministic, all recoverable from source records. Phase 1b candidate.
+
+**"What's the biggest risk you haven't solved?"**
+Per-carrier schema drift. We currently validate against a single `standard_enr.json`. In production, every carrier has its own companion guide with field-specific validation rules that change when the carrier updates their systems. Phase 2 requires a carrier-keyed schema map and a change-detection process when companion guides update.
 
 ---
 
-*GSentinel · v0.5 · April 2026*
-*The only benefits tool that doesn't just surface the rejection — it fixes it.*
+*GSentinel · v0.5 · April 2026 · github.com/bnamatherdhala7/GSentinel*
