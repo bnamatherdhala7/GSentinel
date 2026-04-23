@@ -255,7 +255,7 @@ def healer_node(state: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Critic — Jailbreak & Compliance Guard
+# Critic — Safety Checker (3 hardcoded rules, no AI)
 # ---------------------------------------------------------------------------
 def critic_node(state: dict) -> dict:
     t_start = time.time()
@@ -267,18 +267,18 @@ def critic_node(state: dict) -> dict:
     # If healer already flagged non-fixable (confidence pre-set to 0.5), pass through
     if state["confidence_score"] == 0.5:
         validation_log = [
-            f"Check 1 — Pre-flagged by Healer as non-fixable for Error {code} — skipping format validation",
-            f"Check 2 — Skipped (non-fixable path)",
-            f"Check 3 — Skipped (non-fixable path)",
+            f"Check 1 — Format check: skipped — Healer flagged Error {code} as non-fixable, no value to validate",
+            f"Check 2 — Blocked values check: skipped (non-fixable path)",
+            f"Check 3 — Data type check: skipped (non-fixable path)",
         ]
-        summary = f"Error {code} routed to HUMAN_REVIEW by Healer. Confidence held at 0.5."
+        summary = f"Error {code} routed to Human Review by Healer. No safety checks needed — there is no corrected value to validate."
         reasoning = f"Healer pre-flagged Error {code} as non-fixable. Passing through confidence=0.5. No validation run."
         state["reasoning_path"].append(f"[Critic] {reasoning}")
         elapsed = round((time.time() - t_start) * 1000)
         state["latency_ms"]["critic"] = elapsed
         state["trace"].append({
             "node": "critic",
-            "role": "Jailbreak & Compliance Guard",
+            "role": "Safety Checker",
             "latency_ms": elapsed,
             "corrected_value": value,
             "pattern_tested": "n/a — non-fixable path",
@@ -305,19 +305,19 @@ def critic_node(state: dict) -> dict:
 
     check1 = bool(re.match(pattern, value))
     validation_log.append(
-        f"Check 1 — Format guard: regex='{pattern}' | value='{value}' → {'PASS' if check1 else 'FAIL'}"
+        f"Check 1 — Format check: value='{value}' must match required pattern → {'PASS' if check1 else 'FAIL — value does not match expected format'}"
     )
 
     check2 = value not in BLOCKED_VALUES
     validation_log.append(
-        f"Check 2 — Jailbreak guard: value '{value}' not in blocked list → {'PASS' if check2 else 'FAIL — blocked sentinel value'}"
+        f"Check 2 — Blocked values check: value '{value}' is {'not ' if check2 else ''}a known placeholder → {'PASS' if check2 else 'FAIL — rejected (e.g. 00000, 99999 are never valid)'}"
     )
 
     numeric_codes = {"402", "610"}
     check3 = value.isdigit() if code in numeric_codes else True
-    label3 = "all-numeric check" if code in numeric_codes else "non-numeric field — injection guard skipped"
+    label3 = "digits only — confirmed" if code in numeric_codes else "not a numeric field — check skipped"
     validation_log.append(
-        f"Check 3 — Injection guard: {label3} → {'PASS' if check3 else 'FAIL — non-numeric chars detected'}"
+        f"Check 3 — Data type check: {label3} → {'PASS' if check3 else 'FAIL — unexpected non-digit characters found'}"
     )
 
     all_pass = check1 and check2 and check3
@@ -330,8 +330,8 @@ def critic_node(state: dict) -> dict:
         f"Confidence degraded to {state['confidence_score']}."
     )
     reasoning = (
-        f"Jailbreak & Compliance Guard activated for Error {code}. "
-        f"Tested '{value}' against pattern '{pattern}'. "
+        f"Safety Checker ran 3 hardcoded rules for Error {code}. "
+        f"Tested '{value}' against required pattern '{pattern}'. "
         f"{sum([check1, check2, check3])}/3 checks passed. {summary}"
     )
     state["reasoning_path"].append(f"[Critic] {reasoning}")
@@ -340,7 +340,7 @@ def critic_node(state: dict) -> dict:
     state["latency_ms"]["critic"] = elapsed
     state["trace"].append({
         "node": "critic",
-        "role": "Jailbreak & Compliance Guard",
+        "role": "Safety Checker",
         "latency_ms": elapsed,
         "corrected_value": value,
         "pattern_tested": pattern,
