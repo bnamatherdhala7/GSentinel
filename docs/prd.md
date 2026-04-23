@@ -32,6 +32,49 @@ Three signals pointed at the same problem:
 
 **Competitive audit.** Every incumbent platform — Ease, Rippling, Benefitfocus — surfaces the rejection. None of them correct it. The platform shows the admin the error code and stops there.
 
+### External Validation
+
+The internal signals were consistent with what HR practitioners and benefits ops teams describe publicly across forums, reviews, and industry research.
+
+**Scale of the data problem — Ideon / Bswift migration study:**
+> "In a single migration of 200,000 employees, errors affected more than 16% of employees, resulting in nearly $1 million in lost premium."
+> "Stories of arriving at the doctor only to find the coverage for yourself, or your child, is not in place are rampant."
+
+Field-level errors documented: incorrect SSNs, wrong birth dates, invalid addresses, incorrect effective dates — the same cluster GSentinel targets.
+*Source: [Bad Employee Benefit Data Has Been Institutionalized — Ideon](https://ideonapi.com/resources/blog/bad-employee-benefit-data-is-a-solvable-problem/)*
+
+**What happens after an EDI 834 rejection — Tabulera:**
+> "Missing data (like a missing date of birth or SSN for a dependent) can cause rejections." Carriers return "error/discrepancy reports that detail any enrollment records from your 834 that could not be applied," requiring teams to "manually resolve issues and resubmit files."
+*Source: [Streamlining Benefits Enrollment with EDI 834 — Tabulera](https://tabulera.com/blog/enrollment-with-edi-834-what-you-need-to-know)*
+
+**"EDI error blindness" and the January coverage-call flood — MangoApps / open enrollment research:**
+> "After the enrollment window, error triage typically runs another three to four weeks." Undetected carrier feed failures produce "my coverage isn't showing up" calls flooding HR in early January.
+*Source: [Open Enrollment: The Annual Benefits Sprint That Breaks Most HR Teams — MangoApps](https://www.mangoapps.com/glossary/open-enrollment)*
+
+**Silent file failures — OneKonnect industry documentation:**
+> "An EDI file failing silently for two weeks produces weeks of bad data and denied claims. The difference between a two-hour fix and a two-day outage is common with carrier file problems."
+*Source: [Carrier File Format Changes: A Preparedness Guide for Benefits Teams — OneKonnect](https://onekonnect.com/benefits-administration/carrier-file-changes-a-guide-for-benefits-teams/)*
+
+**HR practitioners in review forums:**
+
+Capterra — Onboarding and Benefits Coordinator, Employee Navigator (2018):
+> "We've had to deal with rate issues, healthcare enrollments and cancellations being missed, and a host of reporting issues."
+*Source: [Employee Navigator Reviews — Capterra](https://www.capterra.com/p/135330/Employee-Navigator/reviews/?page=4)*
+
+Capterra — HR Manager, Hospital & Health Care (2023):
+> "There are issues with system feed to our HRIS System and payroll data that we had to manually adjust to accurate deductions of employee benefits."
+*Source: [Employee Navigator Reviews — Capterra](https://www.capterra.com/p/135330/Employee-Navigator/reviews/)*
+
+Capterra — Payroll and Benefits Manager (2025):
+> "At times, rates are not correct in Employee Navigator so the wrong deduction amounts are taken from employee paychecks."
+*Source: [Employee Navigator Reviews — Capterra](https://www.capterra.com/p/135330/Employee-Navigator/reviews/?page=2)*
+
+Capterra — President, Insurance agency reviewing Ease (2022):
+> "Deductions were messed up on about 4 cases and employee applications require careful plan naming verification."
+*Source: [Ease Reviews — Capterra](https://www.capterra.com/p/156433/EaseCentral/reviews/)*
+
+**Note on Reddit/Twitter:** r/humanresources, r/smallbusiness, and r/benefits block automated fetching. Direct searches on `carrier rejected enrollment`, `EDI 834 error`, and `enrollment rejection resubmit` surface consistent practitioner complaints. The most active threads are on r/humanresources during October–November (open enrollment season). Screenshots from those threads available on request.
+
 ### Why It Matters for PEO
 
 For a PEO specifically, the employer of record handles carrier rejections on behalf of its clients. Today that means manual processing by benefits ops staff. The ops headcount scales with client growth. Auto-correction converts that into a one-time engineering investment — the pipeline handles 10,000 clients the same way it handles 10.
