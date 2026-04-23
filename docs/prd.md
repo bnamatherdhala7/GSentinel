@@ -1,5 +1,5 @@
 # GSentinel — Product Walkthrough
-### Principal PM Interview · Benefits & PEO · 30-minute Project Review
+
 
 ---
 
