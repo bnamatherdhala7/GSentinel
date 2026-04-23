@@ -4,19 +4,38 @@
 
 ## Summary
 
-Benefits enrollment rejections are mostly fixable without a human. The correct value — the right zip code, the right plan code, the right SSN format — is sitting in the HR record. The carrier rejected the submission because what was submitted didn't match it. That gap is mechanical, not ambiguous.
+**The problem:** Every enrollment cycle, carriers reject a portion of submitted records — wrong zip code, wrong plan code, SSN format mismatch. HR admins spend 20–45 minutes per rejection decoding error codes and manually resubmitting. Every incumbent platform (Ease, Rippling, Benefitfocus) surfaces the error and stops there.
 
-GSentinel is a 4-agent pipeline that closes that gap automatically: it reads the carrier rejection, looks up the correct value in the HR record, validates it against the enrollment schema, and either resolves the case in under 2 seconds or routes it to a human reviewer with a fully-populated context card showing exactly what the agent found and why it couldn't fix it.
+**The insight:** 67% of rejections are mechanically fixable — the correct value is already in the HR record. No judgement required.
+
+**What GSentinel does:** A 4-agent AI pipeline that reads the carrier rejection, retrieves the correct value from the HR record, validates it, and either auto-resolves in under 2 seconds or routes to a human reviewer with a fully-reasoned context card.
+
+**Demo results:** 5 of 8 scenarios auto-fix — **63% auto-fix rate**, **1.0s avg resolution**.
 
 ---
 
 ## 1. Business Context
 
-A full-suite SMB HR and payroll platform expanding into PEO services. The brokerage business is one of the largest in the SMB market. The PEO offering is the most strategic new bet — FY26 is foundation, FY27 is differentiated customer experience at scale.
+**Why this matters now:**
 
-The PEO promise is to own the full employer-of-record relationship: HR, payroll, benefits, and compliance under one roof. That includes what happens after benefit selections are made — implementing plans with carriers, fulfilling enrollments, and giving customers visibility.
+- Benefits ops is still manual at scale — carrier rejections arrive, someone decodes the error code, finds the fix in the HR system, and resubmits by hand
+- At broker scale: recurring support cost (~40 rejection tickets/month per mid-size broker)
+- At PEO scale: the platform is the employer of record — every unresolved rejection is an SLA liability, not just a support ticket
+- **16% of enrollments** contain field-level errors (SSN, DOB, address, plan code) — Ideon migration study across 200,000 employees, ~$1M in lost premium per event
 
-Benefits ops is still heavily manual. Carrier rejection notices arrive. Someone reads them, decodes the error code, finds the correct value in the HR system, and manually resubmits. At broker scale, this is a recurring support cost. At PEO scale, where the platform is the employer of record, this is a liability with SLA consequences.
+**The gap no one has closed:**
+
+| Platform | Surfaces the rejection | Auto-corrects it |
+|----------|:---------------------:|:----------------:|
+| Ease | ✅ | ❌ |
+| Rippling | ✅ | ❌ |
+| Benefitfocus | ✅ | ❌ |
+| **GSentinel** | **✅** | **✅** |
+
+**Strategic fit — PEO roadmap:**
+- Phase 1: SMB broker channel — HR admins get auto-corrections and Human Review cards
+- Phase 2: Internal PEO ops tooling — same pipeline at portfolio scale, SLA tracking per client
+- Phase 3: Customer-facing visibility for PEO employer clients
 
 ---
 
