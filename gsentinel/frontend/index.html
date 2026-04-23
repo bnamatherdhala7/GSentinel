@@ -578,6 +578,7 @@
   }
   function flowConnector(id) {
     const el = document.getElementById('conn-' + id);
+    if (!el) return;
     el.classList.remove('flowing'); void el.offsetWidth; el.classList.add('flowing');
   }
   function setProgress(p) { document.getElementById('progressFill').style.width = p + '%'; }
@@ -679,7 +680,7 @@
   // ── Pipeline ───────────────────────────────────────────────────────────────
   function resetPipelineUI() {
     NODE_ORDER.forEach(n => { setNodeState(n, 'idle'); document.getElementById('time-' + n).textContent = ''; });
-    ['conn-1','conn-2','conn-3'].forEach(id => document.getElementById(id).classList.remove('flowing'));
+    ['conn-1','conn-2','conn-3'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('flowing'); });
     setProgress(0);
     pipelineData = null;
   }
